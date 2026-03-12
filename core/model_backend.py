@@ -21,17 +21,43 @@ class ModelManager:
         print(f"DEBUG: HF model downloaded/loaded -> {model_id}")
         return True
         
-    def get_dummy_weights(self, num_points=2500):
+    def get_real_weights(self, model_id, num_points=2500):
         """
-        Generates dummy 3D coordinates representing a UMAP projection of weights.
-        Returns:
-            points: np.ndarray shape (num_points, 3)
-            ids: np.ndarray shape (num_points,)
+        Extracts real static embedding coordinates from the language model using PCA scaling.
+        Avoids simulated random data. 
         """
-        # Create a rough cluster shape in 3D representing latent structure
-        points = np.random.normal(loc=0.0, scale=8.0, size=(num_points, 3))
-        ids = np.arange(num_points)
-        return points, ids
+        try:
+            import torch
+            from transformers import AutoModelForCausalLM
+            from sklearn.decomposition import PCA
+            
+            print(f"Extracting real 3D geometric matrix from HF model: {model_id}...")
+            # We load the bare model just to pull its input embeddings to project them
+            model = AutoModelForCausalLM.from_pretrained(model_id, low_cpu_mem_usage=True)
+            embeddings = model.get_input_embeddings().weight.detach().float().numpy()
+            
+            # Select random subset to display if vocab is too massive
+            if embeddings.shape[0] > num_points:
+                indices = np.random.choice(embeddings.shape[0], num_points, replace=False)
+                sampled_embeddings = embeddings[indices]
+                ids = indices
+            else:
+                sampled_embeddings = embeddings
+                ids = np.arange(embeddings.shape[0])
+                
+            pca = PCA(n_components=3)
+            points = pca.fit_transform(sampled_embeddings)
+            points = points * 5.0 # scale up visual spread slightly
+            
+            # Memory safety cleanup
+            del model
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                
+            return points, ids
+        except Exception as e:
+            print(f"[ERR] Could not extract real matrix: {e}")
+            return np.zeros((1, 3)), np.zeros(1)
 
 def apply_rank_one_update(model_name, point_id, new_coords, bias_vector):
     """
