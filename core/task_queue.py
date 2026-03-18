@@ -7,7 +7,7 @@ When the user types an order containing multiple distinct wrong facts,
 Phase 1 (DeepSeek) returns a JSON list of tasks. This module parses that
 list, stores tasks, and drives sequential execution one task at a time.
 
-Each EditTask contains everything needed for 1 full Phase1→Phase5 cycle.
+Each EditTask contains everything needed for 1 full Phase1->Phase5 cycle.
 """
 
 import json
@@ -200,5 +200,5 @@ class TaskQueue:
         lines = []
         for t in self._tasks:
             icon = {"queued": "⏳", "running": "⚙️", "done": "✅", "failed": "❌"}.get(t.status, "?")
-            lines.append(f"{icon} [{t.index + 1}] {t.subject}: {t.wrong_value} → {t.correct_value}")
+            lines.append(f"{icon} [{t.index + 1}] {t.subject}: {t.wrong_value} -> {t.correct_value}")
         return "\n".join(lines)

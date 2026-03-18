@@ -2,8 +2,12 @@ from pathlib import Path
 
 import yaml
 
-with open("globals.yml", "r") as stream:
+# Use the file's own location to find globals.yml regardless of the CWD.
+# The globals.yml lives one directory above util/ (i.e. in LyapLock/).
+_GLOBALS_YML = Path(__file__).resolve().parent.parent / "globals.yml"
+with open(str(_GLOBALS_YML), "r") as stream:
     data = yaml.safe_load(stream)
+
 
 (RESULTS_DIR, DATA_DIR, STATS_DIR, HPARAMS_DIR, KV_DIR) = (
     Path(z)

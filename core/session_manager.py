@@ -67,7 +67,7 @@ class SessionManager:
         self._create_schema()
         self._insert_session(model_name, order_text)
 
-        logger.info(f"Session created: {self._session_id} → {self._db_path}")
+        logger.info(f"Session created: {self._session_id} -> {self._db_path}")
         return self._session_id
 
     @property
