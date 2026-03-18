@@ -1,0 +1,60 @@
+# NeuroScalpel — .gitignore
+# ─────────────────────────────────────────────────────
+
+# ── Python cache ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ──────────────────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ── Build / distribution ──────────────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# ── IDE ───────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── NeuroScalpel runtime outputs ─────────────────────
+# Session databases (keep the sessions/ folder, ignore content)
+sessions/*/session.db
+sessions/*/*.db-shm
+sessions/*/*.db-wal
+
+# Generated logs (keep logs/ folder, ignore daily log files)
+logs/neuroscalpel_*.log
+logs/latest.log
+
+# Old flat JSON dump (replaced by session DB system)
+transformer_neuron_log.json
+
+# Hugging Face model caches (can be huge)
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# ROME / LyapLock stats cache
+data/stats/
+
+# Temp verification scripts
+*.tmp.py
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

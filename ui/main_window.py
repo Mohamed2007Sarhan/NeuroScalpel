@@ -44,6 +44,7 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from core.model_backend import ModelManager, apply_real_edit
 from core.session_manager import session_manager
 from core.task_queue import TaskQueue, EditTask
+from core.generated_log import gen_log
 from core.point_and_layer_detect import CoreAnomalyDetector
 from ui.panels.feature_extractor import FeatureExtractorPanel
 from ui.panels.dashboard import DashboardPanel
@@ -464,13 +465,14 @@ class MainWindow(QMainWindow):
         self.visualizer.reset_target()
         self.dashboard.clear_target_lock()
 
-        # Create session in DB
+        # Create session in DB + open generated log
         try:
             session_id = session_manager.create_session(
                 model_name=self.active_model_name or "unknown",
                 order_text=order_text
             )
             self.feature_panel.update_readout(f"Session created: {session_id}")
+            gen_log.start_session(session_id, self.active_model_name or "unknown", order_text)
         except Exception as e:
             self.feature_panel.update_readout(f"Session DB warning: {e}")
 
@@ -489,6 +491,8 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _start_phase1(self, order_text: str):
+        gen_log.log_phase_start(1, 0, 1)
+        gen_log.log_phase_event(1, f"Order received: {order_text[:120]}")
         self.feature_panel.update_readout("Phase 1: Sending to Surgeon Mind...")
         self.t_phase1 = Phase1Thread(order_text, parent=self)
         self.t_phase1.stream_mind.connect(self.win_mind.append_text)
@@ -498,6 +502,7 @@ class MainWindow(QMainWindow):
 
     def _on_phase1_complete(self, raw_json: str):
         """Parse tasks from DeepSeek JSON response."""
+        gen_log.log_phase_end(1, "Trick prompts formulated")
         tasks = self.task_queue.parse_from_phase1_response(raw_json)
         total = self.task_queue.total
 
@@ -505,6 +510,8 @@ class MainWindow(QMainWindow):
             f"\n>> {total} task(s) queued.\n{self.task_queue.summary_text()}\n\n",
             "#00ff00"
         )
+
+        gen_log.log_tasks_parsed(tasks)
 
         # Persist tasks to session DB
         for t in tasks:
@@ -566,6 +573,8 @@ class MainWindow(QMainWindow):
 
     def _start_phase2(self, task: EditTask):
         model = self.active_model_name or "openai-community/gpt2"
+        gen_log.log_phase_start(2, task.index, self.task_queue.total)
+        gen_log.log_phase_event(2, f"Scanning model '{model}' with prompt: {task.trick_prompt[:80]}")
         self.feature_panel.update_readout(
             f"Phase 2: Neural scan for task #{task.index + 1}..."
         )
@@ -583,20 +592,24 @@ class MainWindow(QMainWindow):
     def _on_phase2_complete(self, analysis: dict):
         task_idx = analysis.get("task_index", 0)
 
-        # Persist scan result
+        # Persist scan result + generated log
+        crit = analysis.get('critical_layer', 'unknown')
+        dev  = analysis.get('max_magnitude', 0.0)
         try:
             session_manager.log_scan_result(
                 task_index=task_idx,
-                critical_layer=analysis.get("critical_layer", ""),
-                max_deviation=analysis.get("max_magnitude", 0.0),
+                critical_layer=crit,
+                max_deviation=dev,
                 raw_report=analysis.get("raw_report", "")
             )
         except Exception:
             pass
+        gen_log.log_scan_result(crit, dev, total_layers=0)
+        gen_log.log_phase_end(2, f"Critical layer: {crit}  |  dev: {dev:.4f}")
 
         self.feature_panel.update_readout(
-            f"Phase 2 complete.\nCritical layer: {analysis.get('critical_layer')}\n"
-            f"Max deviation: {analysis.get('max_magnitude', 0):.4f}"
+            f"Phase 2 complete.\nCritical layer: {crit}\n"
+            f"Max deviation: {dev:.4f}"
         )
         self._start_phase3(analysis)
 
@@ -605,6 +618,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _start_phase3(self, analysis: dict):
+        gen_log.log_phase_start(3, self.current_task.index if self.current_task else 0, self.task_queue.total)
         self.feature_panel.update_readout("Phase 3: Target Lock analysis...")
         self.t_phase3 = Phase3Thread(
             order_text=self.last_order_text,
@@ -640,6 +654,10 @@ class MainWindow(QMainWindow):
                 session_manager.update_task_status(self.current_task.index, "done")
             except Exception:
                 pass
+
+            # Generated log
+            gen_log.log_target(layer_idx, vec_pt, full_response[-400:])
+            gen_log.log_phase_end(3, f"TARGET LOCKED Layer {layer_idx} Neuron {vec_pt}")
 
             # PHASE 4: Visualise target neuron
             self._phase4_visualize(layer_idx, vec_pt)
@@ -684,6 +702,7 @@ class MainWindow(QMainWindow):
             self.dashboard.btn_rome_edit.setText("🧬  APPLY ROME EDIT")
             return
 
+        gen_log.log_phase_start(5, self.current_task.index, self.task_queue.total)
         self.feature_panel.update_readout(
             f"Phase 5: Applying ROME + LyapLock edit for task #{self.current_task.index + 1}..."
         )
@@ -699,25 +718,33 @@ class MainWindow(QMainWindow):
         self.t_phase5.start()
 
     def _on_phase5_complete(self, result: dict):
-        self.dashboard.btn_rome_edit.setText("✅  EDIT APPLIED")
+        self.dashboard.btn_rome_edit.setText("[OK] EDIT APPLIED")
+
+        weights = result.get("weights", [])
+        method  = result.get("method", "unknown")
+        success = result.get("success", False)
+        notes   = result.get("notes", "")
 
         try:
             session_manager.log_edit(
                 task_index=self.current_task.index if self.current_task else 0,
-                method=result.get("method", "unknown"),
-                weights_changed=json.dumps(result.get("weights", [])),
-                success=result.get("success", False),
-                notes=result.get("notes", "")
+                method=method,
+                weights_changed=json.dumps(weights),
+                success=success,
+                notes=notes
             )
         except Exception:
             pass
 
+        gen_log.log_edit(method, weights, success, notes)
+        gen_log.log_phase_end(5, method if success else "FAILED")
+
         self.feature_panel.update_readout(
-            f"Edit complete ✅\nMethod: {result.get('method')}\n"
-            f"Weights modified: {len(result.get('weights', []))}"
+            f"Edit complete\nMethod: {method}\n"
+            f"Weights modified: {len(weights)}"
         )
         self.win_edit.append_text(
-            f"\n>> EDIT COMPLETE: {result.get('method')}\n", "#00ff00"
+            f"\n>> EDIT COMPLETE: {method}\n", "#00ff00"
         )
 
         # Advance to next queued task if any
@@ -807,9 +834,11 @@ class MainWindow(QMainWindow):
 
     def _on_error(self, error: str):
         self.feature_panel.update_readout(f"PIPELINE ERROR: {error}")
+        gen_log.log_error(0, error)
 
     def closeEvent(self, event):
         self._stop_all_threads()
+        gen_log.close_session(success=True)
         session_manager.close()
         for w in self.active_sub_windows:
             try:
