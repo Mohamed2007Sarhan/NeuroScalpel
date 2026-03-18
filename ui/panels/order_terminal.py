@@ -1,6 +1,10 @@
+from pathlib import Path
+
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor
+from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor, QIcon
+
+_ICON_PATH = str(Path(__file__).parent.parent.parent / "img" / "icon.ico")
 
 class OrderTerminalWindow(QWidget):
     """
@@ -14,6 +18,7 @@ class OrderTerminalWindow(QWidget):
         # Ensure it acts as an independent window
         self.setWindowFlags(Qt.WindowType.Window)
         self.setWindowTitle(title)
+        self.setWindowIcon(QIcon(_ICON_PATH))
         self.resize(500, 400)
         
         # Apply the specific window ID for QSS styling in main

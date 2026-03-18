@@ -11,11 +11,16 @@ Launches the application with a premium cyberpunk aesthetic:
 import sys
 import time
 
+from pathlib import Path
+
 from PyQt6.QtWidgets import (
     QApplication, QSplashScreen, QLabel, QVBoxLayout, QWidget
 )
 from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QPixmap, QColor, QPainter, QFont, QLinearGradient
+from PyQt6.QtGui import QPixmap, QColor, QPainter, QFont, QLinearGradient, QIcon
+
+# Resolve the icon path relative to this file so it works from any CWD
+_ICON_PATH = str(Path(__file__).parent / "img" / "icon.ico")
 
 from ui.main_window import MainWindow
 
@@ -416,6 +421,10 @@ def main():
     app.setApplicationVersion("2.0")
     app.setOrganizationName("NeuroScalpel Research")
 
+    # ── App-wide icon (inherited by ALL windows / dialogs) ───────────────────
+    _app_icon = QIcon(_ICON_PATH)
+    app.setWindowIcon(_app_icon)
+
     # ── Splash ──────────────────────────────────────────────────────────────
     splash_px = _make_splash_pixmap()
     splash = QSplashScreen(splash_px, Qt.WindowType.WindowStaysOnTopHint)
@@ -432,6 +441,7 @@ def main():
 
     # ── Launch main window ───────────────────────────────────────────────────
     window = MainWindow()
+    window.setWindowIcon(_app_icon)   # explicit on main window too
     window.show()
     splash.finish(window)
 
