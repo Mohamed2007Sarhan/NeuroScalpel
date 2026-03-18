@@ -58,7 +58,7 @@ logger = logging.getLogger("NeuroScalpel.MainWindow")
 # ---------------------------------------------------------------------------
 # NVIDIA / DeepSeek client factory
 # ---------------------------------------------------------------------------
-_NVIDIA_API_KEY = "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"
+_NVIDIA_API_KEY = "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"
 _DEEPSEEK_MODEL = "deepseek-ai/deepseek-v3.2"
 _BASE_URL       = "https://integrate.api.nvidia.com/v1"
 
@@ -113,22 +113,39 @@ class Phase1Thread(QThread):
 
     def run(self):
         self.stream_mind.emit("\n>> PHASE 1: DIAGNOSIS INITIALIZED <<\n", "#00f3ff")
-        self.stream_mind.emit(">> Analysing order for distinct issues...\n\n", "#0088aa")
+        self.stream_mind.emit("> Analysing order for distinct issues...\n\n", "#0088aa")
         try:
             client = _nvidia_client()
+            # ── Streaming so output appears live ──────────────────────
             completion = client.chat.completions.create(
                 model=_DEEPSEEK_MODEL,
                 messages=[
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": f"USER ORDER:\n{self.order_text}"}
                 ],
-                temperature=0.3,
-                max_tokens=2048,
+                temperature=1,
+                top_p=0.95,
+                max_tokens=8192,
+                extra_body={"chat_template_kwargs": {"thinking": True}},
+                stream=True,
             )
-            raw = completion.choices[0].message.content.strip()
+            self.stream_mind.emit("\n>> Surgeon Mind processing...\n", "#bc13fe")
+            chunks = []
+            for chunk in completion:
+                if not getattr(chunk, "choices", None):
+                    continue
+                # Handle reasoning content (thinking tokens)
+                reasoning = getattr(chunk.choices[0].delta, "reasoning_content", None)
+                if reasoning:
+                    self.stream_mind.emit(reasoning, "#0055aa")
+                content = getattr(chunk.choices[0].delta, "content", None)
+                if content:
+                    self.stream_mind.emit(content, "#bc13fe")
+                    chunks.append(content)
+            raw = "".join(chunks).strip()
             self.stream_mind.emit(
-                f">> Phase 1 Response:\n{raw}\n\n>> Passing to Task Queue...\n",
-                "#bc13fe"
+                "\n\n>> JSON ready — Passing to Task Queue...\n",
+                "#00f3ff"
             )
             self.phase1_complete.emit(raw)
         except Exception as e:
@@ -252,7 +269,7 @@ class Phase3Thread(QThread):
                 ],
                 temperature=1,
                 top_p=0.95,
-                max_tokens=2048,
+                max_tokens=8192,
                 extra_body={"chat_template_kwargs": {"thinking": True}},
                 stream=True
             )
