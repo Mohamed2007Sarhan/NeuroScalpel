@@ -155,8 +155,27 @@ class FeatureExtractorPanel(QWidget):
             self.input_hf.setEnabled(True)
             self.progress_bar.hide()
             
-    def update_readout(self, text):
-        """Appends a new line to the terminal emulation text edit."""
+    def update_readout(self, text: str):
+        """Appends a new line to the terminal emulation text edit (plain white)."""
+        if not isinstance(text, str):
+            text = str(text)
         self.text_readout.append(f"> {text}")
+        scrollbar = self.text_readout.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
+
+    def update_readout_colored(self, text: str, color: str = "#00f3ff"):
+        """
+        Appends coloured text to the panel console.
+        Used by ModelManager log callbacks.
+        """
+        from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor
+        if not isinstance(text, str):
+            text = str(text)
+        cursor = self.text_readout.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(color))
+        cursor.setCharFormat(fmt)
+        cursor.insertText(f"> {text}")
         scrollbar = self.text_readout.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
