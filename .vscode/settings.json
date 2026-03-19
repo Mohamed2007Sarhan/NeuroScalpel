@@ -1,3 +1,12 @@
 {
-    "cmake.sourceDirectory": "C:/Users/Moham/Desktop/NeuroScalpel/cpp_version"
+    "cmake.sourceDirectory": "C:/Users/Moham/Desktop/NeuroScalpel/cpp_version",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./core",
+        "-p",
+        "*test.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

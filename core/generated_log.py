@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-_LOGS_DIR = Path(__file__).resolve().parent.parent / "logs"
+from core.log_config import PIPELINE_DIR as _LOGS_DIR  # logs/pipeline/
 _SEPARATOR = "─" * 72
 
 # ── ANSI-free colour codes stored as plain labels in the log file ─────────────

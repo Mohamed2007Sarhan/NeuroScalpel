@@ -218,15 +218,16 @@ class Phase3Thread(QThread):
     SYSTEM_PROMPT = (
         "You are the 'Surgeon Mind', the analytical core of NeuroScalpel. "
         "You receive raw PyTorch tensor telemetry from live FFN hooks executed during "
-        "a forward pass of the target LLM. Your objective: mechanically interpret these "
-        "logs to pinpoint the exact transformer layer and vector-space coordinate where "
-        "the hallucinated concept is formed.\n\n"
-        "Provide a concise, technically precise breakdown of the tensor deviations observed.\n\n"
-        "CRITICAL DIRECTIVE — PHASE 4 TARGET LOCK:\n"
+        "a forward pass of the target LLM, along with Phase 2 neuron-targeting results "
+        "computed via three independent methods: max FFN activation, ROME-style k* projection, "
+        "and gradient sensitivity (\u2202loss/\u2202hidden).\n\n"
+        "Review the telemetry and CONFIRM or CORRECT the Phase 2 (layer, neuron) identification. "
+        "Provide a concise mechanistic explanation of WHY that neuron misfires for this fact.\n\n"
+        "CRITICAL DIRECTIVE \u2014 PHASE 4 TARGET LOCK:\n"
         "You MUST conclude your entire response with this EXACT line and nothing after it:\n"
         "TARGET LOCKED: Layer [X], Vector Point [Y]\n"
-        "Where X = integer layer index (from the deviation report) and "
-        "Y = integer vector point index (use the token position with highest L2 norm or deviation). "
+        "Where X = integer layer index and Y = integer neuron index. "
+        "Use the Phase 2 values unless you have strong evidence they require correction. "
         "Do NOT add punctuation, spaces, or extra text after that line."
     )
 
@@ -248,16 +249,29 @@ class Phase3Thread(QThread):
             )
             client = _nvidia_client()
 
-            # Build user message
+            # Build user message — include Phase 2 neuron results for DeepSeek confirmation
             task_context = ""
             if self.task:
                 task_context = (
-                    f"\nCURRENT TASK: Correct '{self.task.wrong_value}' → '{self.task.correct_value}' "
+                    f"\nCURRENT TASK: Correct '{self.task.wrong_value}' \u2192 '{self.task.correct_value}' "
                     f"for subject '{self.task.subject}'.\n"
                 )
 
+            phase2_neuron    = self.analysis_dict.get("critical_neuron", -1)
+            phase2_layer     = self.analysis_dict.get("critical_layer", "?")
+            phase2_layer_idx = self.analysis_dict.get("critical_layer_idx", -1)
+            phase2_method    = self.analysis_dict.get("consensus_method", "?")
+            phase2_agree     = self.analysis_dict.get("agreement_pct", 0)
+            neuron_block = (
+                f"\n=== PHASE 2 NEURON TARGETING RESULTS ===\n"
+                f"Critical layer : {phase2_layer} (idx={phase2_layer_idx})\n"
+                f"Critical neuron: {phase2_neuron}\n"
+                f"Consensus method: {phase2_method} (agreement={phase2_agree:.0f}%)\n"
+                f"Please CONFIRM or CORRECT these values.\n"
+            ) if phase2_neuron >= 0 else ""
+
             user_msg = (
-                f"USER ORDER: {self.order_text}{task_context}\n\n"
+                f"USER ORDER: {self.order_text}{task_context}{neuron_block}\n\n"
                 f"RAW PYTORCH TENSOR LOG:\n{self.analysis_dict.get('raw_report', '')}"
             )
 
@@ -321,8 +335,9 @@ class Phase5EditThread(QThread):
         self.task = task
 
     def run(self):
+        neuron_hint = getattr(self.task, "target_point", -1)
         self.stream_edit.emit(
-            f"\n>> PHASE 5: ROME + LyapLock EDIT  [Task #{self.task.index + 1}] <<\n",
+            f"\n>> PHASE 5: NEURAL EDIT  [Task #{self.task.index + 1}] <<\n",
             "#bc13fe"
         )
         self.stream_edit.emit(
@@ -330,7 +345,8 @@ class Phase5EditThread(QThread):
             f">> Wrong Value  : {self.task.wrong_value}\n"
             f">> Correct Value: {self.task.correct_value}\n"
             f">> Prompt       : {self.task.trick_prompt}\n"
-            f">> Target Layer : {self.task.target_layer}\n",
+            f">> Target Layer : {self.task.target_layer}\n"
+            f">> Target Neuron: {neuron_hint}\n",
             "#0088aa"
         )
 
@@ -342,6 +358,7 @@ class Phase5EditThread(QThread):
                 target_new=self.task.correct_value,
                 target_old=self.task.wrong_value,
                 layer_hint=self.task.target_layer,
+                neuron_hint=neuron_hint if neuron_hint >= 0 else None,
                 log_callback=self.stream_edit.emit
             )
             self.stream_edit.emit(
@@ -589,7 +606,12 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _start_phase2(self, task: EditTask):
-        model = self.active_model_name or "openai-community/gpt2"
+        model = self.active_model_name
+        if not model:
+            self.feature_panel.update_readout(
+                "ERROR: No model loaded.\nLoad a model first before starting a pipeline run."
+            )
+            return
         gen_log.log_phase_start(2, task.index, self.task_queue.total)
         gen_log.log_phase_event(2, f"Scanning model '{model}' with prompt: {task.trick_prompt[:80]}")
         self.feature_panel.update_readout(
@@ -609,9 +631,18 @@ class MainWindow(QMainWindow):
     def _on_phase2_complete(self, analysis: dict):
         task_idx = analysis.get("task_index", 0)
 
-        # Persist scan result + generated log
-        crit = analysis.get('critical_layer', 'unknown')
-        dev  = analysis.get('max_magnitude', 0.0)
+        crit      = analysis.get("critical_layer", "unknown")
+        crit_idx  = analysis.get("critical_layer_idx", -1)
+        neuron    = analysis.get("critical_neuron", -1)
+        dev       = analysis.get("max_magnitude", 0.0)
+
+        # Store both layer and neuron on the current_task for Phase 5
+        if self.current_task:
+            if crit_idx >= 0:
+                self.current_task.target_layer = crit_idx
+            if neuron >= 0:
+                self.current_task.target_point = neuron
+
         try:
             session_manager.log_scan_result(
                 task_index=task_idx,
@@ -622,10 +653,13 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
         gen_log.log_scan_result(crit, dev, total_layers=0)
-        gen_log.log_phase_end(2, f"Critical layer: {crit}  |  dev: {dev:.4f}")
+        gen_log.log_phase_end(2,
+            f"Critical layer: {crit} (idx={crit_idx}) | neuron: {neuron} | dev: {dev:.4f}")
 
         self.feature_panel.update_readout(
-            f"Phase 2 complete.\nCritical layer: {crit}\n"
+            f"Phase 2 complete.\n"
+            f"Critical layer: {crit} (idx={crit_idx})\n"
+            f"Critical neuron: {neuron}\n"
             f"Max deviation: {dev:.4f}"
         )
         self._start_phase3(analysis)
@@ -703,7 +737,7 @@ class MainWindow(QMainWindow):
         )
 
     # ------------------------------------------------------------------
-    # PHASE 5 — ROME + LyapLock Edit
+    # PHASE 5 — Neural Edit
     # ------------------------------------------------------------------
 
     def _on_apply_rome_requested(self):
@@ -716,12 +750,12 @@ class MainWindow(QMainWindow):
                 "Load the same model via the Feature Panel first."
             )
             self.dashboard.btn_rome_edit.setEnabled(True)
-            self.dashboard.btn_rome_edit.setText("🧬  APPLY ROME EDIT")
+            self.dashboard.btn_rome_edit.setText("🧬  APPLY NEURAL EDIT")
             return
 
         gen_log.log_phase_start(5, self.current_task.index, self.task_queue.total)
         self.feature_panel.update_readout(
-            f"Phase 5: Applying ROME + LyapLock edit for task #{self.current_task.index + 1}..."
+            f"Phase 5: Applying neural edit for task #{self.current_task.index + 1}..."
         )
 
         self.t_phase5 = Phase5EditThread(
@@ -775,7 +809,7 @@ class MainWindow(QMainWindow):
 
     def _on_phase5_error(self, error: str):
         self.dashboard.btn_rome_edit.setEnabled(True)
-        self.dashboard.btn_rome_edit.setText("🧬  APPLY ROME EDIT")
+        self.dashboard.btn_rome_edit.setText("🧬  APPLY NEURAL EDIT")
         self.feature_panel.update_readout(f"Edit failed: {error}")
 
     # ------------------------------------------------------------------

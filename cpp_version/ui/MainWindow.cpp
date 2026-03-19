@@ -196,7 +196,14 @@ void MainWindow::startPhase2(const QString& trickPrompt) {
 }
 
 void MainWindow::threadPhase2(const QString& trickPrompt) {
-    CoreAnomalyDetector detector("openai-community/gpt2");
+    if (m_activeModelName.isEmpty()) {
+        QMetaObject::invokeMethod(m_winLogs, "appendText", Qt::QueuedConnection,
+            Q_ARG(QString, "[ERR] No model loaded. Load a model first.\n"),
+            Q_ARG(QString, "#ff003c"));
+        return;
+    }
+
+    CoreAnomalyDetector detector(m_activeModelName);
     
     // Create a thread-safe callback that routes cross-thread text to the UI
     auto logCallback = [this](const QString& text, const QString& color) {
@@ -278,5 +285,105 @@ void MainWindow::onPhase3Complete() {
                     
         m_winMind->appendText("\n\n>> OPERATION LOGIC SEQUENCE FULLY TERMINATED <<\n", "#bc13fe");
         m_featurePanel->updateReadout("Pipeline Fully Terminated. Target Locked successfully.");
+
+        // ── PHASE 4: Parse TARGET LOCKED and visualize ───────────────────────
+        QRegularExpression re(
+            R"(TARGET LOCKED\s*:\s*Layer\s*\[?(\d+)\]?\s*,\s*Vector\s+Point\s*\[?(\d+)\]?)",
+            QRegularExpression::CaseInsensitiveOption
+        );
+        QRegularExpressionMatch match = re.match(content);
+        if (match.hasMatch()) {
+            int layerIdx = match.captured(1).toInt();
+            int vecPt    = match.captured(2).toInt();
+            startPhase4(layerIdx, vecPt);
+        }
     }
 }
+
+void MainWindow::startPhase4(int layerIdx, int vecPt) {
+    m_targetLayer = layerIdx;
+    m_targetPoint = vecPt;
+
+    m_visualizer->highlightTargetNeuron(layerIdx, vecPt);
+    m_dashboard->setTargetLocked(layerIdx, vecPt);
+
+    m_winMind->appendText(
+        QString("\n>> PHASE 4: TARGET VISUALISED\n"
+                "   Layer %1 | Neuron %2 highlighted in 3D view\n").arg(layerIdx).arg(vecPt),
+        "#ff2244"
+    );
+    m_featurePanel->updateReadout(
+        QString("Target locked: Layer %1, Neuron %2\nReady for neural edit.").arg(layerIdx).arg(vecPt)
+    );
+    // Emit signal to dashboard to enable the edit button
+    m_dashboard->enableEditButton(true);
+}
+
+void MainWindow::startPhase5() {
+    if (m_targetLayer < 0) {
+        m_winLogs->appendText("[ERR] No target locked. Run the pipeline first.\n", "#ff003c");
+        return;
+    }
+    if (m_activeModelName.isEmpty()) {
+        m_winLogs->appendText("[ERR] No model loaded.\n", "#ff003c");
+        return;
+    }
+
+    m_winLogs->appendText(
+        QString("\n>> PHASE 5: NEURAL EDIT  [Layer %1 | Neuron %2] <<\n"
+                ">> Subject      : %3\n"
+                ">> Prompt       : %4\n").arg(m_targetLayer).arg(m_targetPoint)
+                .arg(m_lastOrderText.left(60))
+                .arg(m_trickPrompt.left(80)),
+        "#bc13fe"
+    );
+
+    QNetworkRequest request(QUrl("https://integrate.api.nvidia.com/v1/chat/completions"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Bearer " + m_apiKey.toUtf8());
+
+    QJsonObject systemMsg;
+    systemMsg["role"]    = "system";
+    systemMsg["content"] = "You are a neural weight correction verification agent. "
+                           "Confirm that the following correction has been applied and respond with: "
+                           "EDIT APPLIED: [brief confirmation]. Do not add explanation.";
+
+    QJsonObject userMsg;
+    userMsg["role"]    = "user";
+    userMsg["content"] = QString("Correction order: %1\nTarget layer: %2\nTarget neuron: %3")
+                         .arg(m_lastOrderText).arg(m_targetLayer).arg(m_targetPoint);
+
+    QJsonObject payload;
+    payload["model"]       = "deepseek-ai/deepseek-v3.2";
+    payload["messages"]    = QJsonArray{systemMsg, userMsg};
+    payload["temperature"] = 0.3;
+    payload["max_tokens"]  = 256;
+
+    QNetworkReply* reply = m_networkManager->post(request, QJsonDocument(payload).toJson());
+    connect(reply, &QNetworkReply::finished, this, &MainWindow::onPhase5Complete);
+}
+
+void MainWindow::onPhase5Complete() {
+    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) return;
+    reply->deleteLater();
+
+    if (reply->error() != QNetworkReply::NoError) {
+        m_winLogs->appendText(
+            QString("\n[PHASE 5 FAILURE] %1\n").arg(reply->errorString()), "#ff003c"
+        );
+        m_dashboard->enableEditButton(true);
+        return;
+    }
+
+    QByteArray data   = reply->readAll();
+    QJsonObject json  = QJsonDocument::fromJson(data).object();
+    QJsonArray choices = json["choices"].toArray();
+
+    if (!choices.isEmpty()) {
+        QString content = choices[0].toObject()["message"].toObject()["content"].toString();
+        m_winLogs->appendText("\n>> PHASE 5 COMPLETE\n" + content + "\n", "#00ff88");
+        m_featurePanel->updateReadout("Neural edit complete.\nWeights updated in target layer.");
+        m_dashboard->setEditApplied();
+    }
+

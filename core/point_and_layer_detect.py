@@ -1,297 +1,541 @@
+"""
+point_and_layer_detect.py
+=========================
+NeuroScalpel — Precision Neural Targeting Engine
+
+Phase 2 of the pipeline. Given a *trick prompt*, this module:
+
+  1. Loads the target model with gradient tracking enabled.
+  2. Attaches forward hooks to every FFN layer (MLP block) to capture:
+        • The hidden state ENTERING the MLP  →  k* (the "key" vector in ROME notation)
+        • The hidden state EXITING  the MLP  →  ffn output
+  3. Runs a forward pass and computes layer-level deviation scores
+     (cosine distance between consecutive hidden states at the last token).
+  4. Identifies the CRITICAL LAYER — the one with the highest angular deviation.
+  5. Within the critical layer, identifies the CRITICAL NEURON using THREE
+     independent methods and combines them for a consensus score:
+        a) MAX ACTIVATION — neuron with the largest absolute output magnitude.
+        b) GRADIENT SENSITIVITY — torch.autograd.grad w.r.t. loss, isolates
+           neurons whose activation shifts most severely impact the logit of
+           the *wrong* prediction.
+        c) K* PROJECTION — dot-product of k* (key vector) with each column of
+           W_in (the MLP up-projection weight): directly mirrors ROME's formula
+           k* = hidden_state @ W_in  and picks the neuron with peak projection.
+  6. Returns a rich dict:
+        {
+          "critical_layer"     : "layer.N" (str),
+          "critical_layer_idx" : N          (int),
+          "critical_neuron"    : M          (int),   ← THE KEY NEW FIELD
+          "k_star"             : [...],              ← k* vector (list[float])
+          "neuron_scores"      : {...},              ← per-method scores
+          "max_magnitude"      : float,
+          "raw_report"         : str,
+        }
+
+The (layer_idx, neuron_idx) pair is passed downstream to:
+    Phase 3 — DeepSeek confirmation agent (TARGET LOCKED: Layer X, Vector Point Y)
+    Phase 5 — Neural edit engine (uses layer_hint + neuron_hint for ROME targeting)
+
+Architecture support
+--------------------
+• GPT-2 family:  model.transformer.h[i].mlp
+• LLaMA / Mistral / Gemma / Qwen:  model.model.layers[i].mlp
+• Phi / OPT / Bloom:  model.model.decoder.layers[i].fc1/fc2 (via generic fallback)
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import math
 import time
 import traceback
-import json
 from functools import partial
-# Attempt to load PyTorch and Transformers safely.
-# On some Windows installations, missing C++ Redistributables will cause WinError 1114 (c10.dll init failure).
-# We must catch this to prevent the GUI from crashing, falling back to a detailed simulation mode.
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional
+
+logger = logging.getLogger("NeuroScalpel.Detector")
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Safe imports
+# ──────────────────────────────────────────────────────────────────────────────
 try:
     import torch
+    import torch.nn.functional as F
     from transformers import AutoModelForCausalLM, AutoTokenizer
     PYTORCH_AVAILABLE = True
-except Exception as e:
+except Exception as _torch_err:
     PYTORCH_AVAILABLE = False
-    print(f"PyTorch Neural Engine offline due to environment error: {e}")
-    print("Falling back to Simulated Cognitive Tracking...")
-
-# --- Hook Function to Capture Sub-Module Tensors ---
-def capture_ffn_tensors(module, input_tensor, output_tensor, layer_idx, ffn_registry):
-    try:
-        in_tensor = input_tensor[0].detach().cpu().float().tolist()
-        out_tensor = output_tensor[0].detach().cpu().float().tolist() if isinstance(output_tensor, tuple) else output_tensor.detach().cpu().float().tolist()
-    except Exception:
-        in_tensor, out_tensor = [], []
-        
-    ffn_registry.append({
-        "layer_index": layer_idx + 1,
-        "ffn_entry_input": in_tensor,
-        "ffn_exit_output": out_tensor
-    })
+    logger.warning(f"PyTorch offline: {_torch_err}")
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Hook storage structure
+# ──────────────────────────────────────────────────────────────────────────────
+class _LayerCapture:
+    """Stores tensors captured by forward hooks for one layer."""
+    __slots__ = ("layer_idx", "k_star", "ffn_output", "attn_output")
+
+    def __init__(self, layer_idx: int):
+        self.layer_idx   = layer_idx
+        self.k_star      = None   # hidden state ENTERING the MLP (last token)
+        self.ffn_output  = None   # hidden state EXITING  the MLP (last token)
+        self.attn_output = None   # attention output (for anomaly scoring)
+
+
+def _make_ffn_hook(capture: _LayerCapture):
+    """Returns a forward hook that saves input/output of the FFN block."""
+    def hook(module, inp, out):
+        try:
+            # inp is a tuple; inp[0] is the hidden state [batch, seq, hidden]
+            x_in  = inp[0].detach()          # (1, seq, hidden)
+            x_out = out if not isinstance(out, tuple) else out[0]
+            x_out = x_out.detach()            # (1, seq, hidden)
+
+            # Take the LAST TOKEN position — this is k* in ROME notation
+            capture.k_star     = x_in [:, -1, :].float()   # (1, hidden)
+            capture.ffn_output = x_out[:, -1, :].float()   # (1, hidden)
+        except Exception:
+            pass
+    return hook
+
+
+def _make_attn_hook(capture: _LayerCapture):
+    """Forward hook for the attention block output."""
+    def hook(module, inp, out):
+        try:
+            x_out = out[0] if isinstance(out, tuple) else out
+            capture.attn_output = x_out.detach()[:, -1, :].float()
+        except Exception:
+            pass
+    return hook
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Architecture resolvers
+# ──────────────────────────────────────────────────────────────────────────────
+def _resolve_layers(model):
+    """
+    Returns a list of (attention_module, ffn_module) for each transformer block.
+    Supports GPT-2, LLaMA, Mistral, Gemma, Phi, Qwen, OPT, Bloom.
+    """
+    # GPT-2 style
+    if hasattr(model, "transformer") and hasattr(model.transformer, "h"):
+        return [(model.transformer.h[i].attn, model.transformer.h[i].mlp)
+                for i in range(len(model.transformer.h))]
+
+    # LLaMA / Mistral / Gemma / Qwen style
+    if hasattr(model, "model") and hasattr(model.model, "layers"):
+        layers = model.model.layers
+        def _attn(l): return getattr(l, "self_attn", getattr(l, "attn", None))
+        def _mlp(l):  return getattr(l, "mlp", None)
+        return [(_attn(l), _mlp(l)) for l in layers]
+
+    # OPT style
+    if hasattr(model, "model") and hasattr(model.model, "decoder") \
+            and hasattr(model.model.decoder, "layers"):
+        layers = model.model.decoder.layers
+        def _attn(l): return l.self_attn
+        def _mlp(l):  return l   # OPT has no separate mlp module; use the block
+        return [(_attn(l), _mlp(l)) for l in layers]
+
+    return []   # unsupported architecture
+
+
+def _get_win_weight(ffn_module, model_name: str) -> Optional["torch.Tensor"]:
+    """
+    Extracts the W_in weight matrix (up-projection of the FFN).
+    This is needed for computing the k* projection scores per neuron.
+
+    Returns shape (hidden_dim, ffn_intermediate_dim) or None.
+    """
+    # GPT-2: transformer.h[i].mlp  →  c_fc (W_in)
+    if hasattr(ffn_module, "c_fc"):
+        return ffn_module.c_fc.weight.detach().float()   # (ffn, hidden) in Conv1D
+
+    # LLaMA / Mistral: mlp.gate_proj or mlp.up_proj
+    if hasattr(ffn_module, "gate_proj"):
+        return ffn_module.gate_proj.weight.detach().float()  # (ffn, hidden)
+
+    if hasattr(ffn_module, "up_proj"):
+        return ffn_module.up_proj.weight.detach().float()    # (ffn, hidden)
+
+    # OPT: fc1
+    if hasattr(ffn_module, "fc1"):
+        return ffn_module.fc1.weight.detach().float()        # (ffn, hidden)
+
+    return None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Main class
+# ──────────────────────────────────────────────────────────────────────────────
 class CoreAnomalyDetector:
     """
-    Production-ready PyTorch tracking module with safe fallback.
-    Loads actual HuggingFace models and injects PyTorch forward hooks 
-    to extract real internal layer activations dynamically. If PyTorch fails
-    to load due to missing Windows DLLs, it seamlessly routes to a robust simulation.
+    Precision neural targeting engine for NeuroScalpel.
+    Identifies the exact (layer, neuron) responsible for a hallucination.
     """
-    def __init__(self, model_name="openai-community/gpt2"):
-        self.model_name = model_name
-        self.model = None
-        self.tokenizer = None
-        self.hooks = []
-        self.ffn_submodule_data = []
-        
-        if PYTORCH_AVAILABLE:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        else:
-            self.device = "simulated_cpu"
 
-    def load_model(self, log_callback=None):
-        """Loads the tokenizer and model into the designated device safely."""
-        if log_callback:
-            log_callback(f"[SYS] Initializing local neural transfer to {self.device}...\n", "#00f3ff")
-            log_callback(f"[SYS] Target Architecture: {self.model_name}\n", "#00f3ff")
-            
+    def __init__(self, model_name: str):
+        if not model_name or not model_name.strip():
+            raise ValueError("CoreAnomalyDetector requires a non-empty model_name.")
+        self.model_name  = model_name
+        self.model       = None
+        self.tokenizer   = None
+        self._hooks      = []
+        self._captures: list[_LayerCapture] = []
+        self.device      = torch.device("cuda" if PYTORCH_AVAILABLE and
+                                         torch.cuda.is_available() else "cpu") \
+                           if PYTORCH_AVAILABLE else "cpu"
+
+    # ── Load ────────────────────────────────────────────────────────────────
+
+    def load_model(self, log_callback: Optional[Callable] = None) -> bool:
+        _log = log_callback or (lambda t, c: None)
+        _log(f"[SYS] Initialising — device: {self.device}\n", "#00f3ff")
+        _log(f"[SYS] Architecture target: {self.model_name}\n", "#00f3ff")
+
         if not PYTORCH_AVAILABLE:
-            if log_callback:
-                log_callback(f"[ERR] NATIVE PYTORCH DLLs OFFLINE / WINERROR DETECTED. Cannot load real model.\n", "#ff003c")
+            _log("[ERR] PyTorch unavailable — cannot load real model.\n", "#ff003c")
             return False
 
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            
-            # Use float16 if on CUDA to manage memory for larger models
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name, trust_remote_code=True
+            )
             dtype = torch.float16 if self.device.type == "cuda" else torch.float32
-            
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
                 device_map=self.device,
                 torch_dtype=dtype,
                 low_cpu_mem_usage=True,
                 output_hidden_states=True,
-                output_attentions=True
+                output_attentions=True,
+                trust_remote_code=True,
             )
-            self.model.eval() # Must be in eval mode for inference
-            
-            if log_callback:
-                log_callback(f"[SYS] Matrix synthesis complete. Ready for probing.\n", "#00ff00")
+            # We will need gradients for the gradient sensitivity pass
+            # but keep eval mode for all other parameters
+            self.model.eval()
+            _log("[SYS] Model load complete. Ready for precision probe.\n", "#00ff00")
             return True
-            
         except Exception as e:
-            if log_callback:
-                log_callback(f"[ERR] Neural load failure: {str(e)}\n{traceback.format_exc()}\n", "#ff003c")
+            _log(f"[ERR] Model load failure: {e}\n{traceback.format_exc()}\n", "#ff003c")
             return False
 
-    def attach_hooks(self, log_callback=None):
-        """Register Hooks for Every Single FFN in Every Layer."""
+    # ── Hooks ───────────────────────────────────────────────────────────────
+
+    def attach_hooks(self, log_callback: Optional[Callable] = None) -> bool:
+        _log = log_callback or (lambda t, c: None)
         if not PYTORCH_AVAILABLE or self.model is None:
-            if log_callback:
-                log_callback(f"[ERR] Model offline. Cannot attach real hooks.\n", "#ff003c")
+            _log("[ERR] No model — cannot attach hooks.\n", "#ff003c")
             return False
-            
-        # Clean previous hooks
-        for h in self.hooks:
-            h.remove()
-        self.hooks.clear()
-        self.ffn_submodule_data.clear()
 
-        num_layers = getattr(self.model.config, "num_hidden_layers", 12)
-        if log_callback:
-            log_callback(f"[HOOK] Registering hooks for {num_layers} Feed-Forward Networks...\n", "#00f3ff")
+        self._remove_hooks()
+        self._captures.clear()
 
-        for i in range(num_layers):
-            # Access the FFN module. Supports GPT-2 and LLaMA
-            ffn_module = None
-            if hasattr(self.model, "transformer") and hasattr(self.model.transformer, "h"):
-                ffn_module = self.model.transformer.h[i].mlp
-            elif hasattr(self.model, "model") and hasattr(self.model.model, "layers"):
-                ffn_module = self.model.model.layers[i].mlp
-                
-            if ffn_module is not None:
-                hook = ffn_module.register_forward_hook(
-                    partial(capture_ffn_tensors, layer_idx=i, ffn_registry=self.ffn_submodule_data)
-                )
-                self.hooks.append(hook)
-            
-        return len(self.hooks) > 0
+        layer_pairs = _resolve_layers(self.model)
+        if not layer_pairs:
+            _log("[WARN] Unsupported architecture — could not resolve layers.\n", "#ffaa00")
+            return False
 
-    def probe_and_analyze(self, prompt, log_callback=None):
+        _log(f"[HOOK] Attaching precision hooks across {len(layer_pairs)} transformer blocks...\n",
+             "#00f3ff")
+
+        for i, (attn_mod, ffn_mod) in enumerate(layer_pairs):
+            cap = _LayerCapture(i)
+            self._captures.append(cap)
+
+            if ffn_mod is not None:
+                h = ffn_mod.register_forward_hook(_make_ffn_hook(cap))
+                self._hooks.append(h)
+
+            if attn_mod is not None:
+                h = attn_mod.register_forward_hook(_make_attn_hook(cap))
+                self._hooks.append(h)
+
+        _log(f"[HOOK] {len(self._hooks)} hooks active across {len(self._captures)} layers.\n",
+             "#00ff00")
+        return True
+
+    # ── Probe ───────────────────────────────────────────────────────────────
+
+    def probe_and_analyze(
+        self,
+        prompt: str,
+        log_callback: Optional[Callable] = None,
+    ) -> Optional[Dict[str, Any]]:
         """
-        Executes a real forward pass using the prompt described by the Agent.
-        Analyzes the true multidimensional mathematical angular deviations across
-        transformers layer by layer to isolate precisely where context shifts.
+        Full forward pass + neuron-level analysis.
+        Returns the targeting dict including (critical_layer_idx, critical_neuron).
         """
-        if not PYTORCH_AVAILABLE:
-            if log_callback: log_callback("[ERR] PyTorch unavailable. Cannot execute real probe.\n", "#ff003c")
+        _log = log_callback or (lambda t, c: None)
+
+        if not PYTORCH_AVAILABLE or self.model is None or self.tokenizer is None:
+            _log("[ERR] Model not loaded.\n", "#ff003c")
             return None
 
-        if self.model is None or self.tokenizer is None:
-            if log_callback: log_callback("[ERR] Model offline. Cannot execute probe.\n", "#ff003c")
-            return None
-            
-        if log_callback:
-            log_callback(f"\n[PROBE] Injected Cognitive Prompt:\n'{prompt}'\n", "#bc13fe")
-            
+        _log(f"\n[PROBE] Prompt: '{prompt}'\n", "#bc13fe")
+
+        # ── Tokenise ────────────────────────────────────────────────────────
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        self.ffn_submodule_data.clear()
-        
-        if log_callback: log_callback("[FORWARD PASS INITIATED]\n", "#bc13fe")
+        input_ids = inputs["input_ids"]
+        tokens = self.tokenizer.convert_ids_to_tokens(input_ids[0].tolist())
+        _log(f"[PROBE] Tokens ({len(tokens)}): {tokens}\n", "#0088aa")
+
+        # ── Forward pass (no_grad for speed; grad only on targeted layer later) ──
         with torch.no_grad():
             outputs = self.model(**inputs)
-            
-        hidden_states = outputs.hidden_states 
-        attentions = outputs.attentions  
-        
-        if log_callback: log_callback("\n[STREAM] --- EXTRACTING NEURON DATA & MATHEMATICAL DEVIATIONS ---\n", "#bc13fe")
-        
-        critical_layer = None
-        max_deviation_score = -1.0
-        analysis_report_lines = []
-        previous_tensor = None
-        
-        report = {
-            "model_architecture": {
-                "model_id": self.model_name,
-                "hidden_dimension_size": self.model.config.hidden_size,
-                "total_layers": self.model.config.num_hidden_layers,
-                "neuron_level_logging_active": True,
-                "hooked_submodules": "Feed-Forward Networks (FFNs)"
-            },
-            "initial_input": {
-                "raw_text": prompt,
-                "tokens": self.tokenizer.convert_ids_to_tokens(inputs["input_ids"][0].tolist()),
-                "input_ids": inputs["input_ids"][0].tolist()
-            },
-            "journey_through_layers": []
-        }
 
-        # Iterate over layers
-        for i in range(len(hidden_states) - 1):
-            layer_input = hidden_states[i]
-            layer_output = hidden_states[i+1]
-            current_attention = attentions[i] if (attentions is not None and i < len(attentions)) else None
-            
-            matching_ffn = next((item for item in self.ffn_submodule_data if item["layer_index"] == i + 1), None)
-            
-            # Record JSON
-            layer_log = {
-                "layer_index": i + 1,
-                "layer_entry_input": {
-                    "description": f"Overall data entering Layer {i + 1}.",
-                    "tensor_shape": list(layer_input.shape),
-                    "tensor_data": layer_input.detach().cpu().float().tolist()
-                },
-                "internal_routing_and_neurons": {
-                    "description": "Granular data flow *within* this layer.",
-                    "attention_mechanism": {
-                        "description": "Contextual routing between tokens.",
-                        "tensor_shape": list(current_attention.shape) if current_attention is not None else [],
-                        "tensor_data": current_attention.detach().cpu().float().tolist() if current_attention is not None else []
-                    },
-                    "feed_forward_network_ffn": {
-                        "description": "Data passing through the internal 'neurons' of this block.",
-                        "ffn_entry_input_data": matching_ffn["ffn_entry_input"] if matching_ffn else [],
-                        "ffn_exit_output_data": matching_ffn["ffn_exit_output"] if matching_ffn else []
-                    }
-                },
-                "layer_exit_output": {
-                    "description": f"Overall data exiting Layer {i + 1} after all processing.",
-                    "tensor_shape": list(layer_output.shape),
-                    "tensor_data": layer_output.detach().cpu().float().tolist()
-                }
-            }
-            report["journey_through_layers"].append(layer_log)
+        hidden_states = outputs.hidden_states   # tuple: (n_layers+1) × (1, seq, hidden)
+        logits        = outputs.logits          # (1, seq, vocab)
 
-            # --- Live Deviation Scoring for the Engine ---
-            last_token_state = layer_output[:, -1, :].float()
-            l2_norm = torch.linalg.norm(last_token_state, dim=-1).mean().item()
-            
-            deviation_score = 0.0
-            if previous_tensor is not None:
-                cos_sim = torch.nn.functional.cosine_similarity(last_token_state, previous_tensor, dim=-1).mean().item()
-                deviation_score = 1.0 - cos_sim
-                
-            previous_tensor = last_token_state
-            
-            state = "Nominal alignment"
-            color = "#00ff00"
-            layer_name = f"layer.{i}"
-            
-            if deviation_score > 0.15:  
-                state = "CRITICAL DEVIATION SPIKE"
+        predicted_id  = torch.argmax(logits[0, -1, :]).item()
+        predicted_tok = self.tokenizer.decode([predicted_id])
+        _log(f"[OUT] Predicted next token: '{predicted_tok}' (id={predicted_id})\n", "#bc13fe")
+
+        # ── Layer-level deviation scan ───────────────────────────────────────
+        _log("\n[SCAN] --- LAYER-BY-LAYER DEVIATION ANALYSIS ---\n", "#bc13fe")
+
+        n_layers          = len(hidden_states) - 1
+        max_dev           = -1.0
+        critical_layer_i  = 0
+        prev_last         = hidden_states[0][:, -1, :].float()
+        report_lines      = []
+        layer_scores      = []   # (layer_idx, dev_score, l2_norm)
+
+        for i in range(n_layers):
+            cur_last = hidden_states[i + 1][:, -1, :].float()
+            l2_norm  = torch.linalg.norm(cur_last, dim=-1).mean().item()
+
+            cos_sim   = F.cosine_similarity(cur_last, prev_last, dim=-1).mean().item()
+            dev_score = 1.0 - cos_sim
+
+            layer_label = f"layer.{i}"
+            state  = "Nominal"
+            color  = "#00ff00"
+            if dev_score > 0.15:
+                state = "CRITICAL DEVIATION"
                 color = "#ff003c"
-            elif deviation_score > 0.05:
+            elif dev_score > 0.05:
                 state = "Angular Drift"
                 color = "#ffaa00"
-            
-            if deviation_score > max_deviation_score:
-                max_deviation_score = deviation_score
-                critical_layer = layer_name
-                
-            report_line = f"  {layer_name:^30} | Token [-1] | L2: {l2_norm:8.2f} | Dev: {deviation_score:6.4f} -> {state}\n"
-            if log_callback:
-                log_callback(report_line, color)
-                time.sleep(0.01)
-            
-            analysis_report_lines.append(report_line)
 
-        logits = outputs.logits
-        predicted_id = torch.argmax(logits[0, -1, :]).item()
-        report["final_model_output"] = {
-            "logits_shape": list(logits.shape),
-            "logits_data": logits.detach().cpu().float().tolist(),
-            "predicted_next_token_id": predicted_id,
-            "predicted_next_token_string": self.tokenizer.decode([predicted_id])
+            if dev_score > max_dev:
+                max_dev          = dev_score
+                critical_layer_i = i
+
+            line = (f"  {layer_label:^22} | last_tok | "
+                    f"L2: {l2_norm:8.3f} | Dev: {dev_score:6.4f} | {state}\n")
+            _log(line, color)
+            report_lines.append(line)
+            layer_scores.append((i, dev_score, l2_norm))
+            prev_last = cur_last
+
+        critical_layer_str = f"layer.{critical_layer_i}"
+        _log(f"\n[RESULT] Critical layer: {critical_layer_str}"
+             f"  (deviation={max_dev:.4f})\n", "#bc13fe")
+
+        # ── Retrieve k* for the critical layer ──────────────────────────────
+        cap = self._captures[critical_layer_i] if critical_layer_i < len(self._captures) else None
+        k_star = cap.k_star if (cap is not None and cap.k_star is not None) else None
+
+        if k_star is None:
+            _log("[WARN] k* not captured for critical layer — using hidden state as proxy.\n",
+                 "#ffaa00")
+            k_star = hidden_states[critical_layer_i][:, -1, :].float()
+
+        # ── Resolve FFN module for the critical layer ────────────────────────
+        layer_pairs = _resolve_layers(self.model)
+        _, critical_ffn = (layer_pairs[critical_layer_i]
+                          if critical_layer_i < len(layer_pairs) else (None, None))
+
+        # ── Neuron identification — three independent methods ────────────────
+        _log(f"\n[NEURON] Targeting neurons within {critical_layer_str}...\n", "#00f3ff")
+
+        neuron_scores = {}
+        critical_neuron = 0
+
+        # ── Method A: Max FFN output activation ─────────────────────────────
+        ffn_out_vec = cap.ffn_output if (cap is not None and cap.ffn_output is not None) else None
+        score_a = None
+        if ffn_out_vec is not None:
+            abs_vals = ffn_out_vec.squeeze(0).abs()   # (hidden,)
+            neuron_a = abs_vals.argmax().item()
+            score_a  = abs_vals[neuron_a].item()
+            neuron_scores["max_activation"] = {
+                "neuron": neuron_a, "score": round(score_a, 6)
+            }
+            _log(f"  [A] Max-Activation  → neuron {neuron_a:5d}  (|act|={score_a:.4f})\n",
+                 "#00f3ff")
+
+        # ── Method B: k* projection onto W_in ───────────────────────────────
+        #   ROME formula: project k* through the up-projection weight matrix
+        #   dot(k*, W_in[neuron]) gives the pre-activation magnitude per neuron
+        score_b = None
+        neuron_b = None
+        if critical_ffn is not None:
+            W_in = _get_win_weight(critical_ffn, self.model_name)
+            if W_in is not None:
+                # W_in shape: (ffn_dim, hidden) or (hidden, ffn_dim) depending on arch
+                # GPT-2 Conv1D transposes: shape is (hidden, ffn_dim)
+                kstar_flat = k_star.squeeze(0).to(W_in.device)  # (hidden,)
+
+                if W_in.shape[1] == kstar_flat.shape[0]:   # (ffn_dim, hidden)
+                    proj = W_in @ kstar_flat                # (ffn_dim,)
+                elif W_in.shape[0] == kstar_flat.shape[0]: # (hidden, ffn_dim) — GPT2 Conv1D
+                    proj = W_in.T @ kstar_flat              # (ffn_dim,)
+                else:
+                    proj = None
+
+                if proj is not None:
+                    neuron_b = proj.abs().argmax().item()
+                    score_b  = proj.abs()[neuron_b].item()
+                    neuron_scores["k_star_projection"] = {
+                        "neuron": neuron_b, "score": round(score_b, 6)
+                    }
+                    _log(f"  [B] k* Projection   → neuron {neuron_b:5d}  "
+                         f"(|k*·w_in|={score_b:.4f})\n", "#00f3ff")
+
+        # ── Method C: Gradient sensitivity (∂loss/∂ffn_output) ─────────────
+        #   Measures how much each neuron's activation affects the logit
+        #   of the predicted (wrong) token — the one we want to suppress.
+        score_c = None
+        neuron_c = None
+        if critical_ffn is not None and cap is not None and cap.ffn_output is not None:
+            try:
+                # Re-run with retain_graph to get gradients
+                # Enable grads only for the FFN output of the critical layer
+                cap_rerun = _LayerCapture(critical_layer_i)
+                h_tmp = critical_ffn.register_forward_hook(_make_ffn_hook(cap_rerun))
+                try:
+                    with torch.enable_grad():
+                        out2 = self.model(**inputs)
+                    h_tmp.remove()
+
+                    # Get the FFN output tensor that was captured
+                    ffn_out_grad = cap_rerun.ffn_output  # (1, hidden) — detached
+
+                    # Recompute through a differentiable path:
+                    # We need a tensor that has grad. Use the hidden state directly.
+                    hs_target = hidden_states[critical_layer_i + 1]  # right after the layer
+                    hs_target = hs_target[:, -1, :].float().requires_grad_(True)
+
+                    # Project to vocab to get logit of the wrong prediction
+                    # (use lm_head or language_model_head)
+                    lm_head = (getattr(self.model, "lm_head", None) or
+                               getattr(self.model, "embed_out", None))
+                    if lm_head is not None:
+                        logit_wrong = lm_head(hs_target)[0, predicted_id]
+                        grads = torch.autograd.grad(logit_wrong, hs_target)[0]
+                        grad_abs = grads.squeeze(0).abs()  # (hidden,)
+                        neuron_c = grad_abs.argmax().item()
+                        score_c  = grad_abs[neuron_c].item()
+                        neuron_scores["gradient_sensitivity"] = {
+                            "neuron": neuron_c, "score": round(score_c, 6)
+                        }
+                        _log(f"  [C] Gradient Sens.  → neuron {neuron_c:5d}  "
+                             f"(|∂loss/∂hidden|={score_c:.4f})\n", "#00f3ff")
+                except Exception as eg:
+                    h_tmp.remove()
+                    _log(f"  [C] Gradient pass skipped: {eg}\n", "#ffaa00")
+            except Exception as eg2:
+                _log(f"  [C] Gradient setup failed: {eg2}\n", "#ffaa00")
+
+        # ── Consensus neuron ─────────────────────────────────────────────────
+        # Weighted vote: k* projection is most theoretically grounded (ROME).
+        # Gradient is most empirically accurate. Max-activation is the fastest.
+        # Priority: gradient > k*_proj > max_activation
+        if neuron_c is not None:
+            critical_neuron = neuron_c
+            method_used = "gradient_sensitivity"
+        elif neuron_b is not None:
+            critical_neuron = neuron_b
+            method_used = "k_star_projection"
+        elif score_a is not None:
+            critical_neuron = neuron_scores["max_activation"]["neuron"]
+            method_used = "max_activation"
+        else:
+            critical_neuron = 0
+            method_used = "fallback"
+
+        # Agreement check across methods
+        votes = [n for n in [score_a and neuron_scores["max_activation"]["neuron"],
+                              neuron_b, neuron_c] if n is not None]
+        agreement_pct = (votes.count(critical_neuron) / len(votes) * 100) if votes else 0.0
+
+        _log(f"\n[NEURON] CONSENSUS: neuron {critical_neuron}"
+             f"  (method={method_used}, agreement={agreement_pct:.0f}%)\n", "#ff2244")
+        _log(f"[TARGET] Layer {critical_layer_i} | Neuron {critical_neuron} 🎯\n", "#ff2244")
+
+        # ── Save JSON log ────────────────────────────────────────────────────
+        log_path = Path("logs") / "pipeline" / "neuron_targeting.json"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_doc = {
+            "model": self.model_name,
+            "prompt": prompt,
+            "tokens": tokens,
+            "predicted_next_token": predicted_tok,
+            "critical_layer_idx": critical_layer_i,
+            "critical_layer_str": critical_layer_str,
+            "critical_neuron": critical_neuron,
+            "consensus_method": method_used,
+            "agreement_pct": round(agreement_pct, 1),
+            "k_star_shape": list(k_star.shape) if k_star is not None else [],
+            "neuron_scores": neuron_scores,
+            "layer_deviations": [
+                {"layer": i, "dev": round(d, 6), "l2": round(l, 4)}
+                for i, d, l in layer_scores
+            ],
         }
-
-        # Saving log file
-        output_file = "transformer_neuron_log.json"
-        if log_callback:
-            log_callback(f"Saving ultra-granular JSON log to {output_file}...\n", "#00f3ff")
-        
         try:
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(report, f, indent=4)
+            with open(log_path, "w", encoding="utf-8") as f:
+                json.dump(summary_doc, f, indent=2)
+            _log(f"[LOG] Targeting report saved → {log_path}\n", "#00f3ff")
         except Exception as e:
-            if log_callback: log_callback(f"Could not save JSON log: {e}\n", "#ff003c")
+            _log(f"[WARN] Could not save JSON: {e}\n", "#ffaa00")
 
-        if log_callback:
-            log_callback("\n[ISOLATION COMPLETE]\n", "#00f3ff")
-            log_callback(f"[RESULT] Sharpest vector deviation identified at: \n >> {critical_layer}\n >> Angular Deviation Magnitude: {max_deviation_score:.4f}\n", "#bc13fe")
+        # ── Build raw_report for Phase 3 ─────────────────────────────────────
+        raw_report = (
+            "=== NEURON TARGETING REPORT ===\n"
+            + "".join(report_lines)
+            + f"\nCRITICAL LAYER : {critical_layer_str} (idx={critical_layer_i})"
+            f"  |  deviation={max_dev:.4f}\n"
+            + f"CRITICAL NEURON: {critical_neuron}  (method={method_used},"
+            f" agreement={agreement_pct:.0f}%)\n"
+            + "\nNEURON SCORES:\n"
+            + json.dumps(neuron_scores, indent=2)
+            + f"\n\nPREDICTED WRONG TOKEN: '{predicted_tok}' (id={predicted_id})\n"
+            + f"MODEL: {self.model_name}\n"
+            + f"TOKENS: {tokens}\n"
+        )
 
-        # Create a compressed version of the JSON for LLM to avoid context limits
-        report_summary = json.dumps({
-            "model_architecture": report["model_architecture"],
-            "initial_input": report["initial_input"],
-            "final_model_output": {
-                "predicted_next_token_id": report["final_model_output"]["predicted_next_token_id"],
-                "predicted_next_token_string": report["final_model_output"]["predicted_next_token_string"]
-            },
-            "highest_tensor_deviation": critical_layer,
-            "message": "Full FFN neural data saved to transformer_neuron_log.json"
-        }, indent=2)
-
-        raw_report = "--- DEVIATION LOG ---\n" + "".join(analysis_report_lines) + "\n\n--- ARCHITECTURE SUMMARY ---\n" + report_summary
-            
         return {
-            "critical_layer": critical_layer,
-            "max_magnitude": max_deviation_score,
-            "tensor_coordinates": "[:, -1, :]",
-            "raw_report": raw_report
+            "critical_layer":     critical_layer_str,
+            "critical_layer_idx": critical_layer_i,
+            "critical_neuron":    critical_neuron,
+            "k_star":             k_star.squeeze(0).tolist() if k_star is not None else [],
+            "neuron_scores":      neuron_scores,
+            "consensus_method":   method_used,
+            "agreement_pct":      round(agreement_pct, 1),
+            "max_magnitude":      max_dev,
+            "raw_report":         raw_report,
         }
-        
+
+    # ── Cleanup ─────────────────────────────────────────────────────────────
+
     def cleanup(self):
-        """Detaches PyTorch hooks to clean up memory safely."""
-        if not PYTORCH_AVAILABLE:
-            return
-            
-        for h in self.hooks:
-            h.remove()
-        self.hooks.clear()
-        self.ffn_submodule_data.clear()
-        if self.model:
+        """Remove all hooks and release model memory."""
+        self._remove_hooks()
+        if PYTORCH_AVAILABLE and self.model is not None:
             del self.model
+            self.model = None
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+
+    def _remove_hooks(self):
+        for h in self._hooks:
+            try:
+                h.remove()
+            except Exception:
+                pass
+        self._hooks.clear()

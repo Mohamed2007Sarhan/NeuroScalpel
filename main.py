@@ -13,6 +13,13 @@ import time
 
 from pathlib import Path
 
+# ── Centralized logging → logs/app/ ──────────────────────────────────────
+_ROOT = Path(__file__).resolve().parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+from core.log_config import setup_logging
+setup_logging(mode="desktop")
+
 from PyQt6.QtWidgets import (
     QApplication, QSplashScreen, QLabel, QVBoxLayout, QWidget
 )
@@ -374,7 +381,7 @@ def _make_splash_pixmap(w: int = 560, h: int = 300) -> QPixmap:
     painter.setFont(f_sub)
     painter.setPen(QColor(188, 19, 254, 200))
     painter.drawText(0, 105, w, 30, Qt.AlignmentFlag.AlignHCenter,
-                     "LLM Neural Surgery  ·  ROME + LyapLock  ·  v2.0")
+                     "LLM Neural Surgery  ·  Neural Edit Engine  ·  v2.0")
 
     # Divider
     painter.setPen(QColor(0, 243, 255, 35))
@@ -388,7 +395,7 @@ def _make_splash_pixmap(w: int = 560, h: int = 300) -> QPixmap:
 
     boot_lines = [
         ("[  OK  ]  Session Manager              SQLite WAL mode",    "#00f3ff"),
-        ("[  OK  ]  Edit Engine                  ROME + LyapLock",    "#00f3ff"),
+        ("[  OK  ]  Edit Engine                  Surgical mode",      "#00f3ff"),
         ("[  OK  ]  3D Neural Visualizer         Layer-slab mode",    "#00f3ff"),
         ("[  OK  ]  Multi-Task Queue             Sequential mode",     "#00f3ff"),
         ("[  OK  ]  Generated Log                daily + latest",     "#00ff88"),

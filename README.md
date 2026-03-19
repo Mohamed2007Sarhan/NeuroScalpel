@@ -15,7 +15,7 @@
 
 <div align="center">
 
-# ⚡ NeuroScalpel
+# ⚡ NeuroScalpel V1.0
 
 ### *Surgical Precision for the Mind of an LLM*
 
@@ -222,6 +222,6 @@ Post-edit, LyapLock applies a Lyapunov stability constraint check to verify the 
 *Built with obsessive attention to neural-level detail.*  
 *No neurons were permanently harmed in the making of this tool.*
 
-**⚡ NeuroScalpel — Operate with Precision.**
+**⚡ NeuroScalpel V1.0 — Operate with Precision.**
 
 </div>

@@ -273,6 +273,7 @@ def apply_real_edit(
     target_new: str,
     target_old: str,
     layer_hint: Optional[int],
+    neuron_hint: Optional[int] = None,
     log_callback=None
 ) -> dict:
     """
@@ -294,7 +295,8 @@ def apply_real_edit(
         prompt_template=prompt_template,
         target_new=target_new,
         target_old=target_old,
-        layer_hint=layer_hint
+        layer_hint=layer_hint,
+        neuron_hint=neuron_hint
     )
 
     result = ROMEEditEngine.apply_edit(

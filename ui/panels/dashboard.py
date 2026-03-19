@@ -126,12 +126,12 @@ class DashboardPanel(QWidget):
             "color: #555; font-family: Consolas, monospace; font-size: 12px;"
         )
 
-        self.btn_rome_edit = QPushButton("🧬  APPLY ROME EDIT")
+        self.btn_rome_edit = QPushButton("🧬  APPLY NEURAL EDIT")
         self.btn_rome_edit.setObjectName("neonBtnPurple")
         self.btn_rome_edit.setEnabled(False)
         self.btn_rome_edit.setToolTip(
             "Available after Target Lock is confirmed.\n"
-            "Runs ROME rank-1 edit + LyapLock preservation."
+            "Runs the neural weight correction pipeline."
         )
         self.btn_rome_edit.clicked.connect(self.on_rome_edit_clicked)
 

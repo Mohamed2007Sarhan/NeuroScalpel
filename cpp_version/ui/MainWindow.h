@@ -30,11 +30,14 @@ private slots:
     // API Pipeline Phase Callbacks
     void onPhase1Complete();
     void onPhase3Complete();
+    void onPhase5Complete();
 
 private:
     void startPhase1(const QString& orderText);
     void startPhase2(const QString& trickPrompt);
     void startPhase3(const QJsonObject& analysisDict);
+    void startPhase4(int layerIdx, int vecPt);
+    void startPhase5();
 
     void prepareSubWindows();
     void threadPhase2(const QString& trickPrompt);
@@ -42,6 +45,9 @@ private:
     ModelManager* m_backend;
     QString m_activeModelName;
     QString m_lastOrderText;
+    int     m_targetLayer = -1;
+    int     m_targetPoint = -1;
+    QString m_trickPrompt;
 
     QSplitter* m_splitter;
     FeatureExtractorPanel* m_featurePanel;

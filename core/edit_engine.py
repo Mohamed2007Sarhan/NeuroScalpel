@@ -76,12 +76,13 @@ if TORCH_OK:
 
 @dataclass
 class EditRequest:
-    """Everything ROME / LyapLock need to perform a single fact edit."""
+    """Everything the neural edit engine needs to perform a single fact correction."""
     subject: str              # e.g. "Egypt"
     prompt_template: str      # e.g. "The capital of {} is"  — use {} for subject
     target_new: str           # e.g. "Cairo"
-    target_old: str = ""      # optional, the wrong value the model currently says
-    layer_hint: Optional[int] = None   # preferred layer from Phase 3 "TARGET LOCKED"
+    target_old: str = ""      # optional — the wrong value the model currently says
+    layer_hint: Optional[int] = None   # layer index from Phase 2/3 targeting
+    neuron_hint: Optional[int] = None  # specific neuron from Phase 2 — sharpens v* computation
 
 
 @dataclass
@@ -229,10 +230,12 @@ class ROMEEditEngine:
             "target_true": {"str": request.target_old} if request.target_old else {"str": ""},
         }
 
-        _log(f"\n[EDIT ENGINE] ⚡ Starting ROME edit\n"
+        _log(f"\n[EDIT ENGINE] ⚡ Precision neural edit\n"
              f"  Subject      : {request.subject}\n"
              f"  Prompt       : {prompt_template.format(request.subject)}\n"
-             f"  Target (new) : {request.target_new}\n", "#bc13fe")
+             f"  Target (new) : {request.target_new}\n"
+             f"  Layer hint   : {request.layer_hint}\n"
+             f"  Neuron hint  : {request.neuron_hint}\n", "#bc13fe")
 
         # ----------------------------------------------------------------
         # 2. ROME
@@ -247,11 +250,12 @@ class ROMEEditEngine:
 
         weights_changed = []
         try:
-            model_name = getattr(model.config, "_name_or_path", "gpt2")
+            model_name = getattr(model.config, "_name_or_path", "unknown")
             hparams = _build_rome_hparams(model_name, layer=request.layer_hint)
 
-            _log(f"[ROME] Targeting layer(s): {hparams.layers}\n", "#00f3ff")
-            _log("[ROME] Computing rank-one update vectors (u, v)...\n", "#00f3ff")
+            _log(f"[ROME] Targeting layer(s): {hparams.layers}  |  neuron hint: {request.neuron_hint}\n",
+                 "#00f3ff")
+            _log("[ROME] Computing rank-one update vectors (k*, v*)...\n", "#00f3ff")
 
             model, weights_copy, _ = apply_rome_to_model(
                 model=model,
@@ -263,6 +267,41 @@ class ROMEEditEngine:
             )
 
             weights_changed = list(weights_copy.keys())
+
+            # ── Neuron-selective mask ────────────────────────────────────────
+            # ROME applies a full rank-1 update: W += u⊗v
+            # When we have a precise neuron_hint from Phase 2, we concentrate
+            # the update onto that neuron's column: 80% on target, 20% spread.
+            if request.neuron_hint is not None and request.neuron_hint >= 0:
+                try:
+                    import torch as _torch
+                    neuron_idx = request.neuron_hint
+                    _log(f"[ROME] Applying neuron-selective mask → neuron {neuron_idx}\n",
+                         "#00f3ff")
+                    for w_name in weights_changed:
+                        from util import nethook as _nethook
+                        w = _nethook.get_parameter(model, w_name)
+                        orig = weights_copy[w_name]         # saved before edit
+                        delta = w.detach() - orig           # full ROME delta
+
+                        # Build concentration mask (same shape as delta)
+                        mask = _torch.full_like(delta, 0.2)  # 20% everywhere
+                        # Concentrate 80% on the neuron dimension
+                        # Delta shape is (hidden, ffn) or (ffn, hidden) depending on arch
+                        n_neurons = min(delta.shape)          # smaller dim = neuron count
+                        n_idx     = max(delta.shape)          # larger dim  = hidden
+                        if neuron_idx < delta.shape[0]:       # neuron is row
+                            mask[neuron_idx, :] = 0.8
+                        if neuron_idx < delta.shape[1]:       # neuron is col
+                            mask[:, neuron_idx] = 0.8
+
+                        with _torch.no_grad():
+                            w[...] = orig + delta * mask
+                    _log(f"[ROME] ✅ Neuron-selective update applied.\n", "#00ff00")
+                except Exception as _em:
+                    _log(f"[ROME] ⚠  Mask step skipped ({_em}). Full-matrix update kept.\n",
+                         "#ffaa00")
+
             _log(f"[ROME] ✅ Weights updated: {weights_changed}\n", "#00ff00")
 
         except Exception as e:
