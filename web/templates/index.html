@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroScalpel — LLM Neural Surgery Web Interface</title>
+  <meta name="description" content="NeuroScalpel web dashboard — surgical LLM weight correction and neural targeting" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- Three.js for 3D neural visualizer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HEADER / TITLE BAR
+════════════════════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <span class="logo-icon">⚡</span>
+    <span class="logo-text">NeuroScalpel</span>
+    <span class="logo-sub">LLM Neural Surgery · Neural Edit Engine · v2.0</span>
+  </div>
+  <div class="topbar-meta">
+    <div class="status-pill" id="connStatus">
+      <span class="pill-dot" id="connDot"></span>
+      <span id="connLabel">CHECKING…</span>
+    </div>
+    <span class="topbar-session" id="sessionLabel">NO SESSION</span>
+    <button class="hdr-btn" id="btnCheckConn">CHECK AI</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MAIN GRID
+════════════════════════════════════════════════════════════════════════════ -->
+<main class="grid">
+
+  <!-- ─── LEFT PANEL ──────────────────────────────────────────────────── -->
+  <aside class="panel panel-left" id="leftPanel">
+
+    <!-- AI Engine Status -->
+    <section class="hud-group" id="groupStatus">
+      <h2 class="hud-title">AI ENGINE STATUS</h2>
+      <div class="ai-status-badge" id="aiBadge">
+        <span class="badge-dot" id="badgeDot"></span>
+        <span id="badgeText">🟡 CHECKING…</span>
+      </div>
+      <button class="btn-neon cyan" id="btnConnCheck">CHECK CONNECTION</button>
+    </section>
+
+    <!-- Local Model -->
+    <section class="hud-group" id="groupLocal">
+      <h2 class="hud-title">LOCAL DIRECTORY</h2>
+      <p class="hud-hint" id="localPathLabel">// NO TARGET DIR…</p>
+      <input type="text" class="hud-input" id="localPathInput"
+             placeholder="C:\models\mistral-7b" />
+      <button class="btn-neon cyan" id="btnLoadLocal">INITIALIZE SECURE LOAD</button>
+    </section>
+
+    <!-- HuggingFace Repo -->
+    <section class="hud-group" id="groupHF">
+      <h2 class="hud-title">HUGGINGFACE REPO INIT</h2>
+      <input type="text" class="hud-input hf-input" id="hfInput"
+             placeholder="> model_id (e.g. openai-community/gpt2)" />
+      <button class="btn-neon cyan" id="btnLoadHF">DOWNLOAD &amp; INJECT</button>
+      <div class="progress-wrap" id="progressWrap" style="display:none">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </section>
+
+    <!-- Model Status -->
+    <section class="hud-group" id="groupModelStatus">
+      <h2 class="hud-title">LOADED MODEL</h2>
+      <p class="model-name" id="modelNameLabel">// NONE</p>
+      <button class="btn-neon cyan" id="btnLoad3D" style="display:none">RENDER 3D VIEW</button>
+    </section>
+
+  </aside>
+
+  <!-- ─── CENTER — 3D VIEW + TERMINAL ─────────────────────────────────── -->
+  <section class="panel panel-center">
+
+    <!-- 3D Neural Visualizer -->
+    <div class="viz-header">
+      <span class="viz-title">⬡ NEURAL LAYER MAP — 3D</span>
+      <div class="viz-legend" id="vizLegend">
+        <span class="legend-item"><span class="leg-dot" style="background:#00f3ff"></span> Early</span>
+        <span class="legend-item"><span class="leg-dot" style="background:#bc13fe"></span> Mid</span>
+        <span class="legend-item"><span class="leg-dot" style="background:#ff2244"></span> Target</span>
+        <span class="legend-item"><span class="leg-dot" style="background:#00ff88"></span> Late</span>
+      </div>
+      <span class="viz-hint" id="vizHint">Load a model to visualize layers</span>
+    </div>
+
+    <div class="viz-canvas-wrap" id="vizCanvasWrap">
+      <canvas id="vizCanvas"></canvas>
+      <div class="viz-overlay" id="vizOverlay">
+        <div class="viz-placeholder">
+          <div class="viz-hex">⬡</div>
+          <p>Load a model to render<br>the 3D neural layer map</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal Log (below 3D) -->
+    <div class="terminal-header">
+      <span class="term-dot red"></span>
+      <span class="term-dot yellow"></span>
+      <span class="term-dot green"></span>
+      <span class="term-title">NEURAL SURGERY TERMINAL</span>
+      <button class="term-clear" id="btnClearLog">CLEAR</button>
+    </div>
+    <div class="terminal-body" id="termLog">
+      <span class="log-initline">&gt; NeuroScalpel Web Interface ready. Awaiting orders…</span>
+    </div>
+
+  </section>
+
+  <!-- ─── RIGHT PANEL ─────────────────────────────────────────────────── -->
+  <aside class="panel panel-right" id="rightPanel">
+
+    <!-- Order Terminal -->
+    <section class="hud-group" id="groupOrder">
+      <h2 class="hud-title">ORDER TERMINAL</h2>
+      <textarea class="hud-textarea" id="orderInput"
+        placeholder="> Describe the hallucination(s) to correct…&#10;> You can list multiple issues — they will be&#10;> queued and handled one by one automatically."></textarea>
+      <button class="btn-neon cyan big" id="btnStartWord">⚡ START WORD</button>
+    </section>
+
+    <!-- Task Queue -->
+    <section class="hud-group" id="groupQueue">
+      <h2 class="hud-title">TASK QUEUE</h2>
+      <p class="task-progress-label" id="taskProgressLabel">No active tasks</p>
+      <div class="task-progress-wrap" id="taskProgressWrap" style="display:none">
+        <div class="task-progress-bar" id="taskProgressBar"></div>
+      </div>
+      <pre class="task-list" id="taskList"></pre>
+    </section>
+
+    <!-- Target Lock -->
+    <section class="hud-group" id="groupTarget">
+      <h2 class="hud-title">TARGET LOCK</h2>
+      <div class="target-display" id="targetDisplay">
+        <span class="target-waiting">// AWAITING SCAN…</span>
+      </div>
+      <button class="btn-neon purple big" id="btnRomeEdit" disabled>
+        🧬 APPLY NEURAL EDIT
+      </button>
+    </section>
+
+    <!-- Bias Vector -->
+    <section class="hud-group" id="groupBias">
+      <h2 class="hud-title">IN-FLIGHT STEERING BIAS</h2>
+      <div class="bias-grid">
+        <label>X-AXIS</label><input type="number" class="bias-spin" id="biasX" value="0" step="0.1" min="-10" max="10"/>
+        <label>Y-AXIS</label><input type="number" class="bias-spin" id="biasY" value="0" step="0.1" min="-10" max="10"/>
+        <label>Z-AXIS</label><input type="number" class="bias-spin" id="biasZ" value="0" step="0.1" min="-10" max="10"/>
+      </div>
+    </section>
+
+  </aside>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TOAST NOTIFICATION
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
