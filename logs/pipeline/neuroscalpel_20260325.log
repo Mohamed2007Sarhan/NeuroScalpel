@@ -1,0 +1,262 @@
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 06:04:25
+  Session ID : 20260325_060425_6c2c60b8
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 06:04:25]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 06:04:25]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+    [2026-03-25 06:08:11]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [225.81s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah al-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-25 06:08:11]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-25 06:08:11]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-25 06:08:11]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [0.61s]
+
+  [2026-03-25 06:08:11]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+  *** TARGET LOCKED ***
+    Layer  : 10
+    Neuron : 496
+  Analysis Snippet:
+    ore (52.39), which significantly outweighs other candidates. Telemetry shows layer 10 has the highest IO_L2 delta (92.54), indicating substantial FFN transformation at the last token of the question. This neuron's high activation when processing "Egypt" suggests it encodes the outdated association with Mohamed Morsi, overpowering correct factual pathways.
+
+TARGET LOCKED: Layer 10, Vector Point 496
+    [2026-03-25 06:11:22]  PHASE-3 │ TARGET-LOCK  <<  TARGET LOCKED Layer 10 Neuron 496  [190.49s]
+
+  [2026-03-25 06:11:25]  PHASE-5 │ ROME-EDIT  (Task 1/1)
+
+  EDIT RESULT: SUCCESS
+    Method          : ROME_success_LyapLock_failed
+    Weights Changed : 1
+      - transformer.h.10.mlp.c_proj.weight
+    Notes : LyapLock pass failed after successful ROME edit.
+post_checks={"has_weights": true, "model_present": true, "tokenizer_present": true}
+    [2026-03-25 06:11:52]  PHASE-5 │ ROME-EDIT  <<  ROME_success_LyapLock_failed  [26.93s]
+
+────────────────────────────────────────────────────────────────────────
+  Session COMPLETED  |  2026-03-25 12:10:08  |  Total: 9119.4s
+────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 12:12:35
+  Session ID : 20260325_121235_479ec8a4
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 12:12:35]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 12:12:35]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+    [2026-03-25 12:16:41]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [245.85s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah al-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-25 12:16:41]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-25 12:16:41]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-25 12:16:41]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [0.64s]
+
+  [2026-03-25 12:16:41]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+  *** TARGET LOCKED ***
+    Layer  : 10
+    Neuron : 496
+  Analysis Snippet:
+    etween the subject "Egypt" and the token "Mohamed". The high deviation indicates this layer's hidden state diverges sharply from the expected representation for a correct factual query, likely because the model's training data or subsequent fine-tuning created an overly strong "Egypt → Morsi" pathway that overrides the more recent "Egypt → al-Sisi" truth.
+
+TARGET LOCKED: Layer 11, Vector Point 496
+    [2026-03-25 12:19:08]  PHASE-3 │ TARGET-LOCK  <<  TARGET LOCKED Layer 10 Neuron 496  [147.02s]
+
+  [2026-03-25 12:20:58]  PHASE-5 │ ROME-EDIT  (Task 1/1)
+
+  EDIT RESULT: SUCCESS
+    Method          : ROME_success_LyapLock_failed
+    Weights Changed : 1
+      - transformer.h.10.mlp.c_proj.weight
+    Notes : LyapLock pass failed after successful ROME edit.
+post_checks={"has_weights": true, "model_present": true, "tokenizer_present": true}
+    [2026-03-25 12:21:22]  PHASE-5 │ ROME-EDIT  <<  ROME_success_LyapLock_failed  [24.70s]
+
+────────────────────────────────────────────────────────────────────────
+  Session COMPLETED  |  2026-03-25 12:26:06  |  Total: 811.2s
+────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 12:26:43
+  Session ID : 20260325_122643_50a8aad5
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 12:26:43]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 12:26:43]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+    [2026-03-25 12:30:48]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [244.65s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah al-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-25 12:30:48]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-25 12:30:48]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-25 12:30:49]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [0.64s]
+
+  [2026-03-25 12:30:49]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 12:36:34
+  Session ID : 20260325_123634_fbc9fd49
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 12:36:34]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 12:36:34]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+
+────────────────────────────────────────────────────────────────────────
+  Session COMPLETED  |  2026-03-25 12:44:14  |  Total: 460.7s
+────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 12:46:26
+  Session ID : 20260325_124626_ed05662b
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 12:46:26]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 12:46:26]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+    [2026-03-25 12:58:19]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [712.81s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah al-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-25 12:58:19]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-25 12:58:19]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-25 12:58:19]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [0.69s]
+
+  [2026-03-25 12:58:19]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+────────────────────────────────────────────────────────────────────────
+  Session COMPLETED  |  2026-03-25 13:12:06  |  Total: 1540.0s
+────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 13:12:29
+  Session ID : 20260325_131229_703fed74
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 13:12:29]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 13:12:29]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+    [2026-03-25 13:21:41]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [552.39s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah al-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-25 13:21:41]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-25 13:21:41]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-25 13:21:42]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [1.10s]
+
+  [2026-03-25 13:21:42]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+  *** TARGET LOCKED ***
+    Layer  : 10
+    Neuron : 496
+  Analysis Snippet:
+    er 11. The critical layer is identified based on io_l2_delta, which is highest for layer 10.
+
+In the LAYER IO METRICS, layer 10 has io_l2_delta of 92.538063, which is the highest, and io_cos_dev of 0.883928. The joint layer score might consider both, but from the equations, joint layer score(i) = 0.5 * norm(Dev_i) + 0.5 * norm(IO_L2_i). Dev_i here might be the deviation from the hidden-state scan,
+    [2026-03-25 13:24:04]  PHASE-3 │ TARGET-LOCK  <<  TARGET LOCKED Layer 10 Neuron 496  [141.92s]
+
+  [2026-03-25 14:15:21]  PHASE-5 │ ROME-EDIT  (Task 1/1)
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-25 15:43:51
+  Session ID : 20260325_154351_414d07e2
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : Fix one factual error in the model.
+
+Before edit (detection prompt):
+Q: Who is the current president of Egypt?
+Expected 
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-25 15:43:51]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-25 15:43:51]  PHASE-1 │ DIAGNOSIS  >>  Order received: Fix one factual error in the model.
+
+Before edit (detection prompt):
+Q: Who is the current president of Egypt?
+Expected 
+    [2026-03-25 15:47:04]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [192.73s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah al-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-25 15:47:04]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-25 15:47:04]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-25 15:47:05]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [1.11s]
+
+  [2026-03-25 15:47:05]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+  *** TARGET LOCKED ***
+    Layer  : 10
+    Neuron : 496
+  Analysis Snippet:
+    ivation neuron in the highest-deviation layer is a reasonable surgical target. Mechanistically, neuron 496 in layer 11 misfires because it has learned an outdated or corrupted association between the "Egypt president" query context and the token "Mohamed", overriding the correct "Abdel Fattah al-Sisi" pathway.
+
+**Correction:** Target layer 11, neuron 496.
+
+TARGET LOCKED: Layer 11, Vector Point 496
+    [2026-03-25 16:01:16]  PHASE-3 │ TARGET-LOCK  <<  TARGET LOCKED Layer 10 Neuron 496  [850.74s]
+
+  [2026-03-25 16:02:58]  PHASE-5 │ ROME-EDIT  (Task 1/1)

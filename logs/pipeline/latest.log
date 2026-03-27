@@ -1,0 +1,46 @@
+
+────────────────────────────────────────────────────────────────────────
+  NeuroScalpel  |  Session Start  |  2026-03-27 23:24:26
+  Session ID : 20260327_232426_36afcce4
+  Model      : /home/mohamed/Desktop/gpt2 (Copy 2)
+  Order      : The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+────────────────────────────────────────────────────────────────────────
+
+  [2026-03-27 23:24:26]  PHASE-1 │ DIAGNOSIS  (Task 1/1)
+    [2026-03-27 23:24:26]  PHASE-1 │ DIAGNOSIS  >>  Order received: The model currently has a wrong fact: it answers that the current president of Egypt is Mohamed Morsi.
+Correct this fact
+    [2026-03-27 23:25:31]  PHASE-1 │ DIAGNOSIS  <<  Trick prompts formulated  [65.36s]
+
+  TASK QUEUE (1 task(s)):
+    [1] subject='Egypt'  wrong='Mohamed Morsi'  correct='Abdel Fattah el-Sisi'
+         prompt='Who is the current president of Egypt?'
+
+  [2026-03-27 23:25:32]  PHASE-2 │ NEURAL-SCAN  (Task 1/1)
+    [2026-03-27 23:25:32]  PHASE-2 │ NEURAL-SCAN  >>  Scanning model '/home/mohamed/Desktop/gpt2 (Copy 2)' with prompt: Who is the current president of Egypt?
+  SCAN RESULT:
+    Critical Layer : layer.10
+    Max Deviation  : 0.060209
+    Total Layers   : 0
+    [2026-03-27 23:25:33]  PHASE-2 │ NEURAL-SCAN  <<  Critical layer: layer.10 (idx=10) | neuron: 496 | dev: 0.0602  [1.68s]
+
+  [2026-03-27 23:25:33]  PHASE-3 │ TARGET-LOCK  (Task 1/1)
+
+  *** TARGET LOCKED ***
+    Layer  : 10
+    Neuron : 496
+  Analysis Snippet:
+    euron 496 in layer 11 likely fires strongly for the association "Egypt → Mohamed Morsi" due to flawed training data or overfitting to historical context (Morsi was president in 2012-2013). This neuron incorrectly suppresses the correct association "Egypt → Abdel Fattah el-Sisi" by overriding later corrective mechanisms, causing a persistent factual error.
+
+TARGET LOCKED: Layer 11, Vector Point 496
+    [2026-03-27 23:29:36]  PHASE-3 │ TARGET-LOCK  <<  TARGET LOCKED Layer 10 Neuron 496  [242.40s]
+
+  [2026-03-27 23:30:18]  PHASE-5 │ ROME-EDIT  (Task 1/1)
+
+  EDIT RESULT: SUCCESS
+    Method          : ROME_and_LyapLock_success
+    Weights Changed : 1
+      - transformer.h.10.mlp.c_proj.weight
+    Notes : Update applied + stability preservation pass applied.
+post_checks={"has_weights": true, "model_present": true, "tokenizer_present": true}
+    [2026-03-27 23:30:51]  PHASE-5 │ ROME-EDIT  <<  UPDATE_and_STABILIZATION_success  [33.66s]

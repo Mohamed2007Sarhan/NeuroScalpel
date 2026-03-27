@@ -1,0 +1,210 @@
+2026-03-24 05:20:16 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 05:40:40 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 05:42:07 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 05:50:33 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 05:53:31 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 05:54:17 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 05:59:06 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 05:59:24 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 06:00:49 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 06:08:42 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 08:57:48 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 08:58:07 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.495628 seconds
+2026-03-24 08:58:23 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.804256 seconds
+2026-03-24 08:58:57 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.469167 seconds
+2026-03-24 08:59:00 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:04:08 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 504 Gateway Timeout"
+2026-03-24 09:04:08 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.431547 seconds
+2026-03-24 09:04:20 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 09:04:38 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.401578 seconds
+2026-03-24 09:04:48 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:05:04 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:05:56 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-03-24 09:05:56 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/gpt2/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-03-24 09:05:56 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-03-24 09:05:56 [huggingface_hub.utils._http   ] WARNING  Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-24 09:05:57 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/gpt2/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-03-24 09:05:57 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/models/gpt2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 09:05:57 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/models/openai-community/gpt2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-03-24 09:05:57 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/models/gpt2/tree/main?recursive=true&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 09:05:57 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/models/openai-community/gpt2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-03-24 09:05:58 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/vocab.json "HTTP/1.1 200 OK"
+2026-03-24 09:05:58 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/gpt2/resolve/main/vocab.json "HTTP/1.1 200 OK"
+2026-03-24 09:05:58 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/merges.txt "HTTP/1.1 200 OK"
+2026-03-24 09:05:59 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/gpt2/resolve/main/merges.txt "HTTP/1.1 200 OK"
+2026-03-24 09:06:00 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+2026-03-24 09:06:00 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/special_tokens_map.json "HTTP/1.1 404 Not Found"
+2026-03-24 09:06:00 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/tokenizer.json "HTTP/1.1 200 OK"
+2026-03-24 09:06:00 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/gpt2/resolve/main/tokenizer.json "HTTP/1.1 200 OK"
+2026-03-24 09:06:02 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-03-24 09:06:03 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/gpt2/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-03-24 09:09:01 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 09:09:20 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.493823 seconds
+2026-03-24 09:09:35 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.861470 seconds
+2026-03-24 09:10:10 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.480021 seconds
+2026-03-24 09:10:26 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.779825 seconds
+2026-03-24 09:11:02 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.438802 seconds
+2026-03-24 09:11:06 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:12:50 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.407503 seconds
+2026-03-24 09:12:52 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:14:36 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:22:09 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 09:22:26 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:24:05 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.405088 seconds
+2026-03-24 09:25:52 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.981880 seconds
+2026-03-24 09:28:44 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 09:29:03 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.449972 seconds
+2026-03-24 09:29:18 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.842663 seconds
+2026-03-24 09:30:18 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:30:36 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:48:18 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 09:48:37 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.380191 seconds
+2026-03-24 09:48:53 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.796324 seconds
+2026-03-24 09:49:26 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.491182 seconds
+2026-03-24 09:49:33 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:50:35 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:53:43 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.466887 seconds
+2026-03-24 09:53:51 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:56:56 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 09:57:01 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:57:21 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 09:57:32 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:18:23 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 10:18:42 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.412294 seconds
+2026-03-24 10:18:57 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.905809 seconds
+2026-03-24 10:19:41 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.452211 seconds
+2026-03-24 10:19:57 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.865108 seconds
+2026-03-24 10:20:37 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.452252 seconds
+2026-03-24 10:20:49 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:21:37 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:24:42 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.401120 seconds
+2026-03-24 10:24:50 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:37:56 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 10:38:15 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.475226 seconds
+2026-03-24 10:38:25 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:41:27 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.475934 seconds
+2026-03-24 10:42:40 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:42:51 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:48:22 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 10:48:29 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:49:27 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:52:36 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.414884 seconds
+2026-03-24 10:53:12 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:55:47 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 10:55:53 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:56:07 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:56:27 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:56:54 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikipedia/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/legacy-datasets/wikipedia/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/legacy-datasets/wikipedia/97a0b052c326b45fb68593a14972d9eed884cd17/README.md "HTTP/1.1 200 OK"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/resolve-cache/datasets/legacy-datasets/wikipedia/97a0b052c326b45fb68593a14972d9eed884cd17/README.md "HTTP/1.1 200 OK"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikipedia/resolve/97a0b052c326b45fb68593a14972d9eed884cd17/wikipedia.py "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/legacy-datasets/wikipedia/resolve/97a0b052c326b45fb68593a14972d9eed884cd17/wikipedia.py "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/legacy-datasets/wikipedia/97a0b052c326b45fb68593a14972d9eed884cd17/wikipedia.py "HTTP/1.1 200 OK"
+2026-03-24 10:56:55 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/resolve-cache/datasets/legacy-datasets/wikipedia/97a0b052c326b45fb68593a14972d9eed884cd17/wikipedia.py "HTTP/1.1 200 OK"
+2026-03-24 10:58:30 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:58:49 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 10:59:07 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikipedia/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 10:59:07 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/legacy-datasets/wikipedia/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 10:59:07 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/legacy-datasets/wikipedia/97a0b052c326b45fb68593a14972d9eed884cd17/README.md "HTTP/1.1 200 OK"
+2026-03-24 12:21:50 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 12:22:21 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 12:22:37 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:22:51 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:23:05 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:23:36 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:36 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:36 [huggingface_hub.utils._http   ] WARNING  Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-24 12:23:36 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/Salesforce/wikitext/b08601e04326c79dfdd32d625aee71d232d685c3/README.md "HTTP/1.1 200 OK"
+2026-03-24 12:23:36 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/resolve-cache/datasets/Salesforce/wikitext/b08601e04326c79dfdd32d625aee71d232d685c3/README.md "HTTP/1.1 200 OK"
+2026-03-24 12:23:36 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext.py "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:36 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext.py "HTTP/1.1 404 Not Found"
+2026-03-24 12:23:37 [httpx                         ] INFO     HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/wikitext/wikitext.py "HTTP/1.1 200 OK"
+2026-03-24 12:23:37 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/revision/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:37 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/revision/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 200 OK"
+2026-03-24 12:23:37 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:37 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=wikitext "HTTP/1.1 404 Not Found"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1?recursive=true&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3?recursive=false&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/dataset_infos.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:38 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-03-24 12:23:39 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/test-00000-of-00001.parquet "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:39 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/test-00000-of-00001.parquet "HTTP/1.1 302 Found"
+2026-03-24 12:23:39 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/xet-read-token/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 200 OK"
+2026-03-24 12:23:42 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00000-of-00002.parquet "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:23:43 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00000-of-00002.parquet "HTTP/1.1 302 Found"
+2026-03-24 12:34:49 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00001-of-00002.parquet "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:34:49 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00001-of-00002.parquet "HTTP/1.1 302 Found"
+2026-03-24 12:46:11 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/validation-00000-of-00001.parquet "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:46:12 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/validation-00000-of-00001.parquet "HTTP/1.1 302 Found"
+2026-03-24 12:46:12 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/xet-read-token/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 200 OK"
+2026-03-24 12:51:44 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 12:52:03 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.457701 seconds
+2026-03-24 12:52:08 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:53:34 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:55:34 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:56:22 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:22 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:22 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/Salesforce/wikitext/b08601e04326c79dfdd32d625aee71d232d685c3/README.md "HTTP/1.1 200 OK"
+2026-03-24 12:56:22 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext.py "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:22 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext.py "HTTP/1.1 404 Not Found"
+2026-03-24 12:56:23 [httpx                         ] INFO     HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/wikitext/wikitext.py "HTTP/1.1 200 OK"
+2026-03-24 12:56:23 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/revision/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:23 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/revision/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 200 OK"
+2026-03-24 12:56:23 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:23 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-03-24 12:56:24 [httpx                         ] INFO     HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=wikitext "HTTP/1.1 404 Not Found"
+2026-03-24 12:56:24 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1?recursive=true&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:24 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-03-24 12:56:24 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3?recursive=false&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:24 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-03-24 12:56:25 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/dataset_infos.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 12:56:25 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-03-24 21:34:13 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 21:34:32 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.393469 seconds
+2026-03-24 21:34:48 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.926779 seconds
+2026-03-24 21:35:27 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.496567 seconds
+2026-03-24 21:35:42 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.836843 seconds
+2026-03-24 21:36:15 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 21:39:18 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.380674 seconds
+2026-03-24 21:42:19 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.769260 seconds
+2026-03-24 21:48:23 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.380495 seconds
+2026-03-24 22:01:16 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 22:01:34 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.452177 seconds
+2026-03-24 22:01:47 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 22:02:55 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 22:04:42 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 22:13:11 [OpenGL.acceleratesupport      ] INFO     No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+2026-03-24 22:13:30 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.433990 seconds
+2026-03-24 22:13:46 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.793795 seconds
+2026-03-24 22:14:48 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.490616 seconds
+2026-03-24 22:15:03 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.753484 seconds
+2026-03-24 22:15:33 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 22:18:45 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.448925 seconds
+2026-03-24 22:21:46 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.892400 seconds
+2026-03-24 22:27:50 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.433691 seconds
+2026-03-24 22:30:51 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.829884 seconds
+2026-03-24 22:30:58 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 22:35:04 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.478523 seconds
+2026-03-24 22:35:24 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 22:36:48 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:48 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:48 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/Salesforce/wikitext/b08601e04326c79dfdd32d625aee71d232d685c3/README.md "HTTP/1.1 200 OK"
+2026-03-24 22:36:48 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext.py "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:48 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext.py "HTTP/1.1 404 Not Found"
+2026-03-24 22:36:48 [huggingface_hub.utils._http   ] WARNING  Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-24 22:36:49 [httpx                         ] INFO     HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/wikitext/wikitext.py "HTTP/1.1 200 OK"
+2026-03-24 22:36:49 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/revision/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:49 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/revision/b08601e04326c79dfdd32d625aee71d232d685c3 "HTTP/1.1 200 OK"
+2026-03-24 22:36:50 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:50 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-03-24 22:36:50 [httpx                         ] INFO     HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=wikitext "HTTP/1.1 404 Not Found"
+2026-03-24 22:36:50 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1?recursive=true&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:51 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-03-24 22:36:51 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3?recursive=false&expand=false "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:51 [httpx                         ] INFO     HTTP Request: GET https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-03-24 22:36:51 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/dataset_infos.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-24 22:36:51 [httpx                         ] INFO     HTTP Request: HEAD https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/dataset_infos.json "HTTP/1.1 404 Not Found"

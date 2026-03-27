@@ -1,0 +1,100 @@
+{
+  "model": "/home/mohamed/Desktop/gpt2 (Copy 2)",
+  "prompt": "Who is the current president of Egypt?",
+  "tokens": [
+    "Who",
+    "\u0120is",
+    "\u0120the",
+    "\u0120current",
+    "\u0120president",
+    "\u0120of",
+    "\u0120Egypt",
+    "?"
+  ],
+  "predicted_next_token": " Is",
+  "critical_layer_idx": 10,
+  "critical_layer_str": "layer.10",
+  "critical_neuron": 496,
+  "consensus_method": "max_activation",
+  "agreement_pct": 33.3,
+  "k_star_shape": [
+    1,
+    768
+  ],
+  "neuron_scores": {
+    "max_activation": {
+      "neuron": 496,
+      "score": 52.388626
+    },
+    "k_star_projection": {
+      "neuron": 2931,
+      "score": 5.04512
+    },
+    "gradient_sensitivity": {
+      "neuron": 176,
+      "score": 0.373871
+    }
+  },
+  "layer_deviations": [
+    {
+      "layer": 0,
+      "dev": 0.860593,
+      "l2": 55.7323
+    },
+    {
+      "layer": 1,
+      "dev": 0.031939,
+      "l2": 58.4863
+    },
+    {
+      "layer": 2,
+      "dev": 0.015226,
+      "l2": 63.0913
+    },
+    {
+      "layer": 3,
+      "dev": 0.02183,
+      "l2": 65.5789
+    },
+    {
+      "layer": 4,
+      "dev": 0.021941,
+      "l2": 70.9789
+    },
+    {
+      "layer": 5,
+      "dev": 0.036308,
+      "l2": 79.2642
+    },
+    {
+      "layer": 6,
+      "dev": 0.037679,
+      "l2": 93.0865
+    },
+    {
+      "layer": 7,
+      "dev": 0.030756,
+      "l2": 105.6239
+    },
+    {
+      "layer": 8,
+      "dev": 0.040892,
+      "l2": 123.3756
+    },
+    {
+      "layer": 9,
+      "dev": 0.052354,
+      "l2": 165.1562
+    },
+    {
+      "layer": 10,
+      "dev": 0.060209,
+      "l2": 247.705
+    },
+    {
+      "layer": 11,
+      "dev": 0.636862,
+      "l2": 265.1277
+    }
+  ]
+}
