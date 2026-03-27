@@ -1,0 +1,214 @@
+/* NeuroScalpel Java Edition — Cyberpunk CSS stylesheet */
+
+/* ── Root ─────────────────────────────────────────────────────────────── */
+.root-bg {
+    -fx-background-color: #070810;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+/* ── Topbar ───────────────────────────────────────────────────────────── */
+.topbar {
+    -fx-background-color: rgba(10,14,28,0.95);
+    -fx-border-color: #1a1f35 transparent transparent transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.logo-text {
+    -fx-text-fill: #00f3ff;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Outfit", "Segoe UI", sans-serif;
+}
+.logo-sub {
+    -fx-text-fill: #bc13fe;
+    -fx-font-size: 11px;
+    -fx-opacity: 0.85;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────── */
+.side-panel {
+    -fx-background-color: rgba(14,18,28,0.92);
+    -fx-border-color: rgba(0,243,255,0.06);
+    -fx-border-width: 0 1 0 0;
+}
+.main-split > .split-pane-divider {
+    -fx-background-color: rgba(0,243,255,0.1);
+    -fx-padding: 0 1 0 1;
+}
+
+/* ── Section Grouping ────────────────────────────────────────────────── */
+.hud-group {
+    -fx-background-color: rgba(8,13,25,0.8);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(0,243,255,0.12);
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+.section-title {
+    -fx-text-fill: #00f3ff;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-letter-spacing: 2px;
+    -fx-opacity: 0.7;
+}
+
+/* ── Inputs ───────────────────────────────────────────────────────────── */
+.hud-input, .hud-textarea {
+    -fx-background-color: rgba(0,10,20,0.7);
+    -fx-text-fill: #00f3ff;
+    -fx-prompt-text-fill: rgba(0,243,255,0.35);
+    -fx-border-color: rgba(0,243,255,0.2);
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 12px;
+}
+.hud-textarea {
+    -fx-text-fill: #8899cc;
+}
+.task-list {
+    -fx-text-fill: #00ff88;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.btn-neon-cyan, .btn-neon-cyan-big, .btn-neon-purple-big, .btn-neon-sm {
+    -fx-background-color: transparent;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.btn-neon-cyan {
+    -fx-text-fill: #00f3ff;
+    -fx-border-color: rgba(0,243,255,0.4);
+    -fx-border-width: 1;
+    -fx-font-size: 11px;
+    -fx-padding: 6 16 6 16;
+}
+.btn-neon-cyan:hover {
+    -fx-background-color: rgba(0,243,255,0.08);
+    -fx-border-color: #00f3ff;
+}
+.btn-neon-cyan-big {
+    -fx-text-fill: #00f3ff;
+    -fx-border-color: rgba(0,243,255,0.5);
+    -fx-border-width: 1.5;
+    -fx-font-size: 12px;
+    -fx-padding: 9 20 9 20;
+}
+.btn-neon-cyan-big:hover {
+    -fx-background-color: rgba(0,243,255,0.1);
+    -fx-effect: dropshadow(gaussian, #00f3ff, 10, 0.4, 0, 0);
+}
+.btn-neon-purple-big {
+    -fx-text-fill: #bc13fe;
+    -fx-border-color: rgba(188,19,254,0.4);
+    -fx-border-width: 1.5;
+    -fx-font-size: 12px;
+    -fx-padding: 10 22 10 22;
+}
+.btn-neon-purple-big:hover {
+    -fx-background-color: rgba(188,19,254,0.12);
+    -fx-effect: dropshadow(gaussian, #bc13fe, 12, 0.5, 0, 0);
+}
+.btn-neon-purple-big:disabled {
+    -fx-opacity: 0.35;
+}
+.btn-neon-sm {
+    -fx-text-fill: #00f3ff;
+    -fx-border-color: rgba(0,243,255,0.3);
+    -fx-border-width: 1;
+    -fx-font-size: 10px;
+    -fx-padding: 4 12 4 12;
+}
+.btn-clear {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(100,120,140,0.7);
+    -fx-font-size: 10px;
+    -fx-padding: 2 8 2 8;
+    -fx-cursor: hand;
+}
+.btn-clear:hover { -fx-text-fill: #ff2244; }
+
+/* ── Status pill ─────────────────────────────────────────────────────── */
+.status-pill {
+    -fx-text-fill: #ffcc00;
+    -fx-background-color: rgba(255,200,0,0.06);
+    -fx-border-color: rgba(255,200,0,0.25);
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 4 14 4 14;
+    -fx-font-size: 11px;
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+}
+
+/* ── 3D Viz pane ─────────────────────────────────────────────────────── */
+.viz-pane {
+    -fx-background-color: rgba(4,6,14,0.95);
+    -fx-border-color: rgba(0,243,255,0.08);
+    -fx-border-width: 0 0 1 0;
+}
+.viz-hint-label {
+    -fx-text-fill: rgba(0,243,255,0.3);
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 13px;
+}
+
+/* ── Terminal ────────────────────────────────────────────────────────── */
+.terminal-header {
+    -fx-background-color: rgba(6,10,22,0.97);
+    -fx-border-color: rgba(0,243,255,0.1) transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+.terminal-title {
+    -fx-text-fill: rgba(0,243,255,0.5);
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 10px;
+    -fx-letter-spacing: 2px;
+}
+.terminal-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+.terminal-scroll .viewport {
+    -fx-background-color: rgba(0,0,0,0.55);
+}
+
+/* ── Target display ──────────────────────────────────────────────────── */
+.target-label {
+    -fx-text-fill: rgba(0,243,255,0.4);
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 12px;
+}
+.target-locked {
+    -fx-text-fill: #ff2244;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, #ff2244, 8, 0.5, 0, 0);
+}
+.model-name-label {
+    -fx-text-fill: #00ff88;
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 12px;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────── */
+.neon-progress > .bar {
+    -fx-background-color: #00f3ff;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, #00f3ff, 6, 0.5, 0, 0);
+}
+.neon-progress > .track {
+    -fx-background-color: rgba(0,243,255,0.1);
+    -fx-background-radius: 4;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────── */
+.hud-spinner .text-field {
+    -fx-background-color: rgba(0,10,20,0.7);
+    -fx-text-fill: #bc13fe;
+    -fx-border-color: rgba(188,19,254,0.2);
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 12px;
+}
