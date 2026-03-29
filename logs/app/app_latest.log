@@ -1,4 +1,2 @@
-2026-03-27 23:36:00 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.415993 seconds
-2026-03-27 23:36:00 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.760242 seconds
-2026-03-27 23:36:03 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.411231 seconds
-2026-03-27 23:36:03 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.880619 seconds
+2026-03-29 16:34:42 [openai._base_client           ] INFO     Retrying request to /chat/completions in 0.423071 seconds
+2026-03-29 16:34:54 [httpx                         ] INFO     HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
