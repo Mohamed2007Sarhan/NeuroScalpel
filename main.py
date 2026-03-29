@@ -29,7 +29,11 @@ from PyQt6.QtGui import QPixmap, QColor, QPainter, QFont, QLinearGradient, QIcon
 # Resolve the icon path relative to this file so it works from any CWD
 _ICON_PATH = str(Path(__file__).parent / "img" / "icon.ico")
 
-from ui.main_window import MainWindow
+# ── NexCore Authentication ─────────────────────────────────────────────────
+# Import deferred post-auth so os.environ is already populated when
+# nvidia_agent.py first reads NVIDIA_BASE_URL / NVIDIA_API_KEY et al.
+from core.auth_manager import auth_manager, AuthException
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Stylesheet — Cyberpunk Neural-Surgery HUD
@@ -432,6 +436,24 @@ def main():
     _app_icon = QIcon(_ICON_PATH)
     app.setWindowIcon(_app_icon)
 
+    # ── Apply QSS stylesheet early so Login dialog inherits it ───────────────
+    app.setStyleSheet(CYBERPUNK_QSS)
+
+    # ── NexCore Authentication ───────────────────────────────────────────────
+    # Import here so os.environ is already set by auth before nvidia_agent loads.
+    from ui.login_window import show_login_flow
+    authenticated = show_login_flow()
+    if not authenticated:
+        # User closed the dialog without completing login → exit gracefully
+        sys.exit(0)
+
+    # ── Inject server-supplied settings into env BEFORE loading MainWindow ───
+    # (nvidia_agent reads os.environ at import time, so import it here)
+    auth_manager.apply_settings_to_env()
+
+    # Now it is safe to import modules that rely on NVIDIA_API_KEY etc.
+    from ui.main_window import MainWindow
+
     # ── Splash ──────────────────────────────────────────────────────────────
     splash_px = _make_splash_pixmap()
     splash = QSplashScreen(splash_px, Qt.WindowType.WindowStaysOnTopHint)
@@ -442,9 +464,6 @@ def main():
     for i in range(24):
         time.sleep(0.05)
         app.processEvents()
-
-    # ── Apply QSS stylesheet ─────────────────────────────────────────────────
-    app.setStyleSheet(CYBERPUNK_QSS)
 
     # ── Launch main window ───────────────────────────────────────────────────
     window = MainWindow()

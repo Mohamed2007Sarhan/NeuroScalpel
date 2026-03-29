@@ -59,6 +59,7 @@ from core.nvidia_agent import (
     nvidia_openai_client,
     stream_delta_reasoning_and_content,
 )
+from core.auth_manager import auth_manager, AuthException
 
 logger = logging.getLogger("NeuroScalpel.MainWindow")
 
@@ -598,6 +599,10 @@ class MainWindow(QMainWindow):
             )
             return
 
+        # ── NexCore: consume 1 token before starting a pipeline run ──────────
+        if not self._deduct_token(action="start_word"):
+            return  # Token deduction failed (error shown inside helper)
+
         self.last_order_text = order_text
         self._stop_all_threads()
         self.visualizer.reset_target()
@@ -1101,6 +1106,10 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _on_run_abliteration(self):
+        # ── NexCore: consume 1 token before running Abliteration ─────────────
+        if not self._deduct_token(action="abliteration"):
+            return  # Token deduction failed (error shown inside helper)
+
         from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
         from PyQt6.QtCore import Qt
         
@@ -1252,6 +1261,42 @@ class MainWindow(QMainWindow):
                 pass
         self.feature_panel.update_readout(f"Target manually adjusted to Layer {new_layer}, Neuron {new_point}.")
         self.visualizer.highlight_target_neuron(new_layer, new_point)
+
+    # ------------------------------------------------------------------
+    # NexCore Token Helper
+    # ------------------------------------------------------------------
+
+    def _deduct_token(self, action: str = "app_use", cost: int = 1) -> bool:
+        """
+        Calls /app/use to deduct tokens. Returns True on success.
+        On failure shows an error message in the Feature Panel AND a popup.
+        """
+        try:
+            result = auth_manager.use_token(action=action, cost=cost)
+            remaining = result.get("tokens_remaining", "?")
+            daily_remaining = result.get("daily_remaining", "?")
+            self.feature_panel.update_readout(
+                f"[NexCore] Token consumed ✔  "
+                f"Remaining: {remaining}  |  Daily remaining: {daily_remaining}"
+            )
+            return True
+        except AuthException as e:
+            from PyQt6.QtWidgets import QMessageBox
+            msg = QMessageBox(self)
+            msg.setWindowTitle("⚠ Token Quota")
+            msg.setText(str(e))
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setStyleSheet(
+                "QMessageBox { background-color: #0d1018; color: #f8fafc; }"
+                "QPushButton { background-color: #6366f1; color: white; "
+                "border-radius: 6px; padding: 8px 16px; font-weight: bold; }"
+            )
+            msg.exec()
+            self.feature_panel.update_readout(f"[NexCore] Blocked: {e}")
+            return False
+        except Exception as e:
+            self.feature_panel.update_readout(f"[NexCore] Token check error: {e}")
+            return False
 
     # ------------------------------------------------------------------
     # Utility

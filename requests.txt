@@ -17,3 +17,4 @@ matplotlib
 bitsandbytes
 jaxtyping
 einops
+pyqtgraph PyOpenGL
